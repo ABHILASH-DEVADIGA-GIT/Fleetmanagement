@@ -1212,6 +1212,68 @@ async def update_quotation_status(quotation_id: str, status_data: dict, payload:
     result.pop('_id', None)
     return result
 
+@api_router.put("/admin/quotations/{quotation_id}")
+async def update_quotation(quotation_id: str, quotation_data: QuotationCreate, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    
+    # Calculate totals
+    subtotal = sum(item.price * item.quantity for item in quotation_data.items)
+    discount_amount = quotation_data.discount_amount or (subtotal * quotation_data.discount_percentage / 100)
+    tax_amount = (subtotal - discount_amount) * quotation_data.tax_percentage / 100
+    total_amount = subtotal - discount_amount + tax_amount
+    
+    updates = {
+        "lead_id": quotation_data.lead_id,
+        "items": [item.model_dump() for item in quotation_data.items],
+        "subtotal": subtotal,
+        "discount_percentage": quotation_data.discount_percentage,
+        "discount_amount": discount_amount,
+        "tax_percentage": quotation_data.tax_percentage,
+        "tax_amount": tax_amount,
+        "total_amount": total_amount,
+        "notes": quotation_data.notes
+    }
+    
+    result = await db.quotations.find_one_and_update(
+        {"quotation_id": quotation_id, "client_id": client_id},
+        {"$set": updates},
+        return_document=True
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Quotation not found")
+    
+    result.pop('_id', None)
+    return result
+
+@api_router.delete("/admin/quotations/{quotation_id}")
+async def delete_quotation(quotation_id: str, payload: dict = Depends(verify_admin)):
+    result = await db.quotations.delete_one({"quotation_id": quotation_id, "client_id": payload.get('client_id')})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Quotation not found")
+    return {"message": "Quotation deleted successfully"}
+
+# Quotation PDF Data (includes admin/client and customer details)
+@api_router.get("/admin/quotations/{quotation_id}/pdf-data")
+async def get_quotation_pdf_data(quotation_id: str, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    
+    # Get quotation
+    quotation = await db.quotations.find_one({"quotation_id": quotation_id, "client_id": client_id}, {"_id": 0})
+    if not quotation:
+        raise HTTPException(status_code=404, detail="Quotation not found")
+    
+    # Get client/admin details
+    client = await db.clients.find_one({"client_id": client_id}, {"_id": 0})
+    
+    # Get lead (customer) details
+    lead = await db.leads.find_one({"lead_id": quotation['lead_id']}, {"_id": 0})
+    
+    return {
+        "quotation": quotation,
+        "client": client,
+        "customer": lead
+    }
+
 # Invoice Management
 async def generate_invoice_number(client_id: str) -> str:
     count = await db.invoices.count_documents({"client_id": client_id})
