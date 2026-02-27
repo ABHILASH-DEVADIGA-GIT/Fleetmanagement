@@ -46,7 +46,7 @@ export const Login = () => {
       >
         <div className="bg-card border border-border p-8 sm:p-12">
           <div className="text-center mb-8">
-            <h1 className="font-heading text-4xl font-bold text-foreground mb-2" data-testid="login-title">Lumina SaaS</h1>
+            <h1 className="font-heading text-4xl font-bold text-foreground mb-2" data-testid="login-title">FrameBook Pro</h1>
             <p className="font-body text-muted-foreground" data-testid="login-subtitle">Sign in to your account</p>
           </div>
 
