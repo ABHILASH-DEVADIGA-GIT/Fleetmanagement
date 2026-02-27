@@ -1082,6 +1082,33 @@ async def delete_package(package_id: str, payload: dict = Depends(verify_admin))
 async def create_addon(addon_data: AddOnCreate, payload: dict = Depends(verify_admin)):
     client_id = payload.get('client_id')
     addon = AddOn(client_id=client_id, **addon_data.model_dump())
+
+# Gallery Management
+@api_router.post("/admin/gallery", response_model=GalleryImage)
+async def add_gallery_image(image_data: dict, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    image = GalleryImage(client_id=client_id, **image_data)
+    await db.gallery.insert_one(image.model_dump())
+    return image
+
+@api_router.get("/admin/gallery", response_model=List[GalleryImage])
+async def get_admin_gallery(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    images = await db.gallery.find({"client_id": client_id}, {"_id": 0}).sort("display_order", 1).to_list(1000)
+    return images
+
+@api_router.delete("/admin/gallery/{image_id}")
+async def delete_gallery_image(image_id: str, payload: dict = Depends(verify_admin)):
+    result = await db.gallery.delete_one({"image_id": image_id, "client_id": payload.get('client_id')})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return {"message": "Image deleted"}
+
+@api_router.get("/public/gallery/{client_id}", response_model=List[GalleryImage])
+async def get_public_gallery(client_id: str):
+    images = await db.gallery.find({"client_id": client_id}, {"_id": 0}).sort("display_order", 1).to_list(1000)
+    return images
+
     await db.addons.insert_one(addon.model_dump())
     return addon
 
