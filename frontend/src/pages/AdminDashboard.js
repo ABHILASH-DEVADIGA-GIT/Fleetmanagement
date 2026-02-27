@@ -13,6 +13,13 @@ import { OfferManagement } from '../components/admin/OfferManagement';
 import { BookingManagement } from '../components/admin/BookingManagement';
 import { AdminUserManagement } from '../components/admin/AdminUserManagement';
 import { NotificationPanel } from '../components/shared/NotificationPanel';
+import { CalendarView } from '../components/admin/CalendarView';
+import { LeadManagement } from '../components/admin/LeadManagement';
+import { PackageManagement } from '../components/admin/PackageManagement';
+import { QuotationManagement } from '../components/admin/QuotationManagement';
+import { InvoiceManagement } from '../components/admin/InvoiceManagement';
+import { ExpenseManagement } from '../components/admin/ExpenseManagement';
+import { ReportsView } from '../components/admin/ReportsView';
 
 export const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
