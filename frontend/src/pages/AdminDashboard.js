@@ -63,7 +63,7 @@ export const AdminDashboard = () => {
             >
               <div className="flex flex-col h-full p-6">
                 <div className="mb-8">
-                  <h1 className="font-heading text-2xl font-bold text-foreground" data-testid="dashboard-title">Lumina SaaS</h1>
+                  <h1 className="font-heading text-2xl font-bold text-foreground" data-testid="dashboard-title">FrameBook Pro</h1>
                   <p className="font-ui text-xs text-muted-foreground uppercase tracking-wider mt-1">Admin Panel</p>
                 </div>
 
