@@ -28,7 +28,14 @@ export const AdminDashboard = () => {
 
   const menuItems = [
     { path: '/admin', label: 'Dashboard', icon: Home },
-    { path: '/admin/content', label: 'Content', icon: FileText },
+    { path: '/admin/calendar', label: 'Calendar', icon: Calendar },
+    { path: '/admin/leads', label: 'Leads', icon: Users },
+    { path: '/admin/packages', label: 'Packages', icon: Briefcase },
+    { path: '/admin/quotations', label: 'Quotations', icon: FileText },
+    { path: '/admin/invoices', label: 'Invoices', icon: FileText },
+    { path: '/admin/expenses', label: 'Expenses', icon: Tag },
+    { path: '/admin/reports', label: 'Reports', icon: FileText },
+    { path: '/admin/content', label: 'Website', icon: FileText },
     { path: '/admin/services', label: 'Services', icon: Briefcase },
     { path: '/admin/offers', label: 'Offers', icon: Tag },
     { path: '/admin/bookings', label: 'Bookings', icon: Calendar },
