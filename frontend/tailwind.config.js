@@ -18,15 +18,15 @@ module.exports = {
                         sm: 'calc(var(--radius) - 4px)'
                 },
                 colors: {
-                        bronze: {
-                                light: '#E5B758',
-                                DEFAULT: '#C68E17',
-                                dark: '#8A620E'
+                        bookpro: {
+                                light: '#60A5FA',
+                                DEFAULT: '#2563EB',
+                                dark: '#1E40AF'
                         },
-                        cinematic: {
-                                light: '#2C4366',
-                                DEFAULT: '#1B2A41',
-                                dark: '#0D1420'
+                        accent: {
+                                light: '#93C5FD',
+                                DEFAULT: '#3B82F6',
+                                dark: '#1D4ED8'
                         },
                         background: 'hsl(var(--background))',
                         foreground: 'hsl(var(--foreground))',
