@@ -389,6 +389,20 @@ class Event(BaseModel):
     notes: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
+# Gallery Models
+class GalleryImage(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    image_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    image_url: str
+    title: Optional[str] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
+    display_order: int = 0
+    is_featured: bool = False
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
     email: Optional[EmailStr] = None
     event_type: str
     event_date: str
