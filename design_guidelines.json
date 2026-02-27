@@ -1,0 +1,212 @@
+{
+  "identity": {
+    "name": "E1",
+    "role": "The Anti-AI Designer",
+    "manifesto": [
+      "Fusion over Imitation: Mix disparate disciplines.",
+      "Emotion First: Design maps to feeling, not trends.",
+      "Content is King: Every page is a directed scene.",
+      "Zoom In: Bold focus on details.",
+      "Negative Space: Value empty areas.",
+      "Contrast: Light vs Dark, Rough vs Smooth."
+    ],
+    "anti_patterns": [
+      "Purple/Teal for CTAs",
+      "Inter everywhere (Visual Monotony)",
+      "Center-Everything Disease",
+      "Gradient Overload (>20%)"
+    ]
+  },
+  "project_context": {
+    "app_name": "Lumina SaaS",
+    "type": "Photographer Management System + Portfolio",
+    "target_audience": "Professional Photographers (Admins) & Their Clients",
+    "emotional_tone": "Cinematic, Trustworthy, Precision, Artistry",
+    "theme_strategy": "Dual Theme (Obsidian Dark for Portfolio / Porcelain Light for Admin Default)",
+    "archetype": "JEWEL & LUXURY mixed with SWISS & HIGH-CONTRAST"
+  },
+  "design_system": {
+    "colors": {
+      "strategy": "The 'Obsidian & Bronze' Protocol",
+      "palette": {
+        "primary": {
+          "name": "Bronze Gold",
+          "hex": "#C68E17",
+          "usage": "Primary CTA, Active States, Highlights",
+          "shades": {
+            "light": "#E5B758",
+            "default": "#C68E17",
+            "dark": "#8A620E"
+          }
+        },
+        "secondary": {
+          "name": "Cinematic Blue",
+          "hex": "#1B2A41",
+          "usage": "Secondary buttons, Footer backgrounds",
+          "shades": {
+            "light": "#2C4366",
+            "default": "#1B2A41",
+            "dark": "#0D1420"
+          }
+        },
+        "neutral": {
+          "light_bg": "#F9F9F8",
+          "light_surface": "#FFFFFF",
+          "light_text": "#1A1A1A",
+          "light_border": "#E2E2E2",
+          "dark_bg": "#0A0A0A",
+          "dark_surface": "#121212",
+          "dark_text": "#E5E5E5",
+          "dark_border": "#2A2A2A"
+        },
+        "semantic": {
+          "success": "#2E7D32",
+          "warning": "#F57C00",
+          "error": "#D32F2F",
+          "info": "#0288D1"
+        }
+      },
+      "gradients": {
+        "hero_glow": "radial-gradient(circle at 50% 50%, rgba(198, 142, 23, 0.15) 0%, rgba(10, 10, 10, 0) 70%)",
+        "glass_surface": "linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)"
+      }
+    },
+    "typography": {
+      "headings": {
+        "font_family": "Playfair Display, serif",
+        "weights": ["400", "600", "700"],
+        "usage": "H1, H2, H3, Hero Text",
+        "letter_spacing": "-0.02em",
+        "line_height": "1.1"
+      },
+      "body": {
+        "font_family": "Manrope, sans-serif",
+        "weights": ["400", "500"],
+        "usage": "Paragraphs, Blog Content",
+        "letter_spacing": "0",
+        "line_height": "1.6"
+      },
+      "ui": {
+        "font_family": "Plus Jakarta Sans, sans-serif",
+        "weights": ["500", "600", "700"],
+        "usage": "Buttons, Nav, Tables, Dashboard Data",
+        "letter_spacing": "0.01em",
+        "line_height": "1.4"
+      },
+      "installation_command": "@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap');"
+    },
+    "spacing": {
+      "scale": "Generous (2x standard)",
+      "container_padding": "px-6 md:px-12 lg:px-24",
+      "section_gap": "gap-12 md:gap-24",
+      "component_gap": "gap-6"
+    },
+    "visual_enhancers": {
+      "borders": "1px solid rgba(255,255,255,0.1) (Dark) / 1px solid rgba(0,0,0,0.08) (Light)",
+      "radius": "rounded-none (Sharp/Professional) or rounded-sm (Subtle)",
+      "shadows": {
+        "card": "0 4px 20px -2px rgba(0,0,0,0.05)",
+        "dropdown": "0 10px 40px -10px rgba(0,0,0,0.2)",
+        "glow": "0 0 20px rgba(198, 142, 23, 0.3)"
+      },
+      "glassmorphism": {
+        "backdrop_blur": "blur-xl",
+        "background": "bg-white/5 (Dark) / bg-white/80 (Light)"
+      }
+    }
+  },
+  "layout_strategies": {
+    "public_website": {
+      "grid_system": "Mode A: The Tetris Grid",
+      "hero_section": "Full-screen immersive image with 'Tracing Beam' border typography. Text aligned bottom-left or center-split.",
+      "services_section": "Asymmetrical grid (Bento style). Hover reveals details.",
+      "gallery_section": "Masonry layout with varying aspect ratios. No uniform squares.",
+      "booking_wizard": "Centered glassmorphism card, step-by-step progress."
+    },
+    "admin_dashboard": {
+      "grid_system": "Mode B: High Density Grid",
+      "layout_structure": "Sidebar Navigation (Collapsible), Top Bar (Search/Profile), Main Content Area.",
+      "cards": "Flat, bordered, no shadow, density-focused.",
+      "tables": "Clean rows, sticky headers, row hover effects, right-aligned actions."
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-white hover:bg-primary/90 rounded-sm font-ui uppercase tracking-wider px-8 py-3",
+      "secondary": "border border-primary/30 text-primary hover:bg-primary/5 rounded-sm font-ui uppercase tracking-wider px-8 py-3",
+      "ghost": "text-foreground/70 hover:text-primary hover:bg-transparent font-ui"
+    },
+    "inputs": {
+      "style": "bg-transparent border-b border-input focus:border-primary rounded-none px-0 py-3 transition-colors",
+      "label": "uppercase text-xs tracking-widest text-muted-foreground mb-1"
+    },
+    "cards": {
+      "portfolio": "group relative overflow-hidden aspect-[3/4] or aspect-[4/3]. Image zoom on hover. Text overlay on hover.",
+      "dashboard": "bg-card border border-border p-6 h-full flex flex-col justify-between"
+    }
+  },
+  "images": {
+    "hero_home": {
+      "url": "https://images.unsplash.com/photo-1749800541964-11bd2ea60259?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwzfHxhcnRpc3RpYyUyMGZhc2hpb24lMjBwb3J0cmFpdCUyMHdvbWFuJTIwb3V0ZG9vciUyMGdvbGRlbiUyMGhvdXJ8ZW58MHx8fHwxNzcyMTYwNTQwfDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Artistic golden hour portrait, woman in studio lighting",
+      "category": "Hero"
+    },
+    "services_wedding": {
+      "url": "https://images.pexels.com/photos/33438374/pexels-photo-33438374.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Happy couple embracing in sunny outdoor wedding",
+      "category": "Service: Wedding"
+    },
+    "services_corporate": {
+      "url": "https://images.unsplash.com/photo-1758873269035-aae0e1fd3422?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHw0fHxwcm9mZXNzaW9uYWwlMjBjb3Jwb3JhdGUlMjB0ZWFtJTIwY3JlYXRpdmUlMjBvZmZpY2UlMjBtZWV0aW5nfGVufDB8fHx8MTc3MjE2MDU0NHww&ixlib=rb-4.1.0&q=85",
+      "alt": "Professional team collaborating at whiteboard",
+      "category": "Service: Corporate"
+    },
+    "services_portrait": {
+      "url": "https://images.unsplash.com/photo-1762796159125-173a5bee09b2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxhcnRpc3RpYyUyMGZhc2hpb24lMjBwb3J0cmFpdCUyMHdvbWFuJTIwb3V0ZG9vciUyMGdvbGRlbiUyMGhvdXJ8ZW58MHx8fHwxNzcyMTYwNTQwfDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Artistic portrait of young woman",
+      "category": "Service: Portrait"
+    },
+    "services_family": {
+      "url": "https://images.pexels.com/photos/3303279/pexels-photo-3303279.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Child and adult running on beach at sunset",
+      "category": "Service: Family"
+    },
+    "about_photographer": {
+      "url": "https://images.unsplash.com/photo-1764013003144-2e367f91c690?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwzfHxwcm9mZXNzaW9uYWwlMjBwaG90b2dyYXBoZXIlMjB0YWtpbmclMjBwaG90b3MlMjBpbiUyMHN0dWRpb3xlbnwwfHx8fDE3NzIxNjA1MTV8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Photographer filming with camera on tripod",
+      "category": "About Section"
+    },
+    "placeholders": {
+      "user_avatar": "https://api.dicebear.com/7.x/lorelei/svg?seed=Admin",
+      "client_avatar": "https://api.dicebear.com/7.x/lorelei/svg?seed=Client"
+    }
+  },
+  "accessibility": {
+    "rules": [
+      "Text contrast must meet APCA standards (Bronze on White needs careful checking).",
+      "Interactive elements must have aria-labels.",
+      "Focus states must be visible (use ring-2 ring-primary).",
+      "Do not rely on color alone for status (use icons)."
+    ]
+  },
+  "tech_stack_specifics": {
+    "framework": "React",
+    "styling": "Tailwind CSS + Shadcn UI",
+    "icons": "Lucide React (Default)",
+    "motion": "Framer Motion (for page transitions and hover effects)"
+  },
+  "universal_guidelines_for_main_agent": [
+    "You tend to converge toward generic outputs. Avoid this.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters.",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Subtle grain textures and noise overlays separate good from extraordinary.",
+    "Prioritize using pre-existing components from src/components/ui.",
+    "Components MUST use named exports.",
+    "Pages MUST use default exports."
+  ],
+  "instructions_to_main_agent": "Use the provided image URLs for their respective sections. Do not use placeholders. Implement the 'Obsidian & Bronze' theme by configuring tailwind.config.js first. Use 'Playfair Display' for all Headings and 'Manrope' for body text. Ensure the Admin Dashboard is dense and functional, while the Public Website is airy and artistic."
+}
