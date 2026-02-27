@@ -883,6 +883,513 @@ async def delete_notification(notification_id: str, payload: dict = Depends(veri
         raise HTTPException(status_code=404, detail="Notification not found")
     return {"message": "Notification deleted successfully"}
 
+
+# ============= Business Management Routes =============
+
+# Dashboard Stats
+@api_router.get("/admin/dashboard/stats")
+async def get_dashboard_stats(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    # Get all invoices for the month
+    invoices = await db.invoices.find({
+        "client_id": client_id,
+        "issue_date": {"$gte": month_start.isoformat()}
+    }, {"_id": 0}).to_list(1000)
+    
+    total_revenue = sum(inv['total_amount'] for inv in invoices)
+    pending_payments = sum(inv['balance_due'] for inv in invoices if inv['balance_due'] > 0)
+    
+    # Get events
+    events_this_month = await db.events.count_documents({
+        "client_id": client_id,
+        "event_date": {"$gte": month_start.isoformat()[:10]}
+    })
+    
+    # Get upcoming events (next 7 days)
+    next_week = (now + timedelta(days=7)).isoformat()[:10]
+    upcoming_events = await db.events.find({
+        "client_id": client_id,
+        "event_date": {"$gte": now.isoformat()[:10], "$lte": next_week},
+        "status": {"$in": ["confirmed", "inquiry"]}
+    }, {"_id": 0}).to_list(100)
+    
+    # Get new leads (unread)
+    new_leads_count = await db.leads.count_documents({
+        "client_id": client_id,
+        "status": "new"
+    })
+    
+    return {
+        "total_revenue_month": total_revenue,
+        "events_this_month": events_this_month,
+        "pending_payments": pending_payments,
+        "upcoming_events": upcoming_events,
+        "new_leads_count": new_leads_count
+    }
+
+# Calendar Data
+@api_router.get("/admin/calendar")
+async def get_calendar_data(payload: dict = Depends(verify_admin), month: Optional[str] = None):
+    client_id = payload.get('client_id')
+    
+    if month:
+        # Parse YYYY-MM format
+        year, month_num = map(int, month.split('-'))
+        start_date = datetime(year, month_num, 1, tzinfo=timezone.utc)
+        if month_num == 12:
+            end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            end_date = datetime(year, month_num + 1, 1, tzinfo=timezone.utc)
+    else:
+        now = datetime.now(timezone.utc)
+        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if now.month == 12:
+            end_date = now.replace(year=now.year + 1, month=1, day=1)
+        else:
+            end_date = now.replace(month=now.month + 1, day=1)
+    
+    events = await db.events.find({
+        "client_id": client_id,
+        "event_date": {
+            "$gte": start_date.isoformat()[:10],
+            "$lt": end_date.isoformat()[:10]
+        }
+    }, {"_id": 0}).to_list(1000)
+    
+    # Group by date
+    calendar_data = {}
+    for event in events:
+        date = event['event_date']
+        if date not in calendar_data:
+            calendar_data[date] = []
+        calendar_data[date].append(event)
+    
+    return calendar_data
+
+# Lead Management
+@api_router.post("/admin/leads", response_model=Lead)
+async def create_lead(lead_data: LeadCreate, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    lead = Lead(client_id=client_id, **lead_data.model_dump())
+    await db.leads.insert_one(lead.model_dump())
+    
+    # Create notification
+    await create_notification(
+        payload['user_id'],
+        client_id,
+        "New Lead Added",
+        f"Lead {lead.name} has been added",
+        "info"
+    )
+    
+    return lead
+
+@api_router.get("/admin/leads", response_model=List[Lead])
+async def get_leads(payload: dict = Depends(verify_admin), status: Optional[str] = None):
+    client_id = payload.get('client_id')
+    query = {"client_id": client_id}
+    if status:
+        query["status"] = status
+    leads = await db.leads.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return leads
+
+@api_router.put("/admin/leads/{lead_id}", response_model=Lead)
+async def update_lead(lead_id: str, updates: dict, payload: dict = Depends(verify_admin)):
+    result = await db.leads.find_one_and_update(
+        {"lead_id": lead_id, "client_id": payload.get('client_id')},
+        {"$set": updates},
+        return_document=True
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    result.pop('_id', None)
+    return result
+
+@api_router.delete("/admin/leads/{lead_id}")
+async def delete_lead(lead_id: str, payload: dict = Depends(verify_admin)):
+    result = await db.leads.delete_one({"lead_id": lead_id, "client_id": payload.get('client_id')})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return {"message": "Lead deleted successfully"}
+
+@api_router.post("/admin/leads/{lead_id}/notes")
+async def add_lead_note(lead_id: str, note_text: dict, payload: dict = Depends(verify_admin)):
+    note = LeadNote(
+        lead_id=lead_id,
+        note=note_text.get('note', ''),
+        created_by=payload['user_id']
+    )
+    await db.lead_notes.insert_one(note.model_dump())
+    return note
+
+@api_router.get("/admin/leads/{lead_id}/notes")
+async def get_lead_notes(lead_id: str, payload: dict = Depends(verify_admin)):
+    notes = await db.lead_notes.find({"lead_id": lead_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return notes
+
+# Package Management
+@api_router.post("/admin/packages", response_model=Package)
+async def create_package(package_data: PackageCreate, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    package = Package(client_id=client_id, **package_data.model_dump())
+    await db.packages.insert_one(package.model_dump())
+    return package
+
+@api_router.get("/admin/packages", response_model=List[Package])
+async def get_packages(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    packages = await db.packages.find({"client_id": client_id}, {"_id": 0}).to_list(1000)
+    return packages
+
+@api_router.put("/admin/packages/{package_id}", response_model=Package)
+async def update_package(package_id: str, updates: dict, payload: dict = Depends(verify_admin)):
+    result = await db.packages.find_one_and_update(
+        {"package_id": package_id, "client_id": payload.get('client_id')},
+        {"$set": updates},
+        return_document=True
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Package not found")
+    result.pop('_id', None)
+    return result
+
+@api_router.delete("/admin/packages/{package_id}")
+async def delete_package(package_id: str, payload: dict = Depends(verify_admin)):
+    result = await db.packages.delete_one({"package_id": package_id, "client_id": payload.get('client_id')})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Package not found")
+    return {"message": "Package deleted successfully"}
+
+# Add-on Management
+@api_router.post("/admin/addons", response_model=AddOn)
+async def create_addon(addon_data: AddOnCreate, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    addon = AddOn(client_id=client_id, **addon_data.model_dump())
+    await db.addons.insert_one(addon.model_dump())
+    return addon
+
+@api_router.get("/admin/addons", response_model=List[AddOn])
+async def get_addons(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    addons = await db.addons.find({"client_id": client_id}, {"_id": 0}).to_list(1000)
+    return addons
+
+@api_router.put("/admin/addons/{addon_id}", response_model=AddOn)
+async def update_addon(addon_id: str, updates: dict, payload: dict = Depends(verify_admin)):
+    result = await db.addons.find_one_and_update(
+        {"addon_id": addon_id, "client_id": payload.get('client_id')},
+        {"$set": updates},
+        return_document=True
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Add-on not found")
+    result.pop('_id', None)
+    return result
+
+@api_router.delete("/admin/addons/{addon_id}")
+async def delete_addon(addon_id: str, payload: dict = Depends(verify_admin)):
+    result = await db.addons.delete_one({"addon_id": addon_id, "client_id": payload.get('client_id')})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Add-on not found")
+    return {"message": "Add-on deleted successfully"}
+
+# Quotation Management
+async def generate_quotation_number(client_id: str) -> str:
+    count = await db.quotations.count_documents({"client_id": client_id})
+    return f"QT-{count + 1:04d}"
+
+@api_router.post("/admin/quotations", response_model=Quotation)
+async def create_quotation(quotation_data: QuotationCreate, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    
+    # Calculate totals
+    subtotal = sum(item.price * item.quantity for item in quotation_data.items)
+    discount_amount = quotation_data.discount_amount or (subtotal * quotation_data.discount_percentage / 100)
+    tax_amount = (subtotal - discount_amount) * quotation_data.tax_percentage / 100
+    total_amount = subtotal - discount_amount + tax_amount
+    
+    quotation_number = await generate_quotation_number(client_id)
+    
+    quotation = Quotation(
+        quotation_number=quotation_number,
+        client_id=client_id,
+        lead_id=quotation_data.lead_id,
+        items=quotation_data.items,
+        subtotal=subtotal,
+        discount_percentage=quotation_data.discount_percentage,
+        discount_amount=discount_amount,
+        tax_percentage=quotation_data.tax_percentage,
+        tax_amount=tax_amount,
+        total_amount=total_amount,
+        notes=quotation_data.notes
+    )
+    
+    await db.quotations.insert_one(quotation.model_dump())
+    
+    # Update lead status
+    await db.leads.update_one(
+        {"lead_id": quotation_data.lead_id},
+        {"$set": {"status": LeadStatus.QUOTATION_SENT}}
+    )
+    
+    return quotation
+
+@api_router.get("/admin/quotations", response_model=List[Quotation])
+async def get_quotations(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    quotations = await db.quotations.find({"client_id": client_id}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return quotations
+
+@api_router.get("/admin/quotations/{quotation_id}", response_model=Quotation)
+async def get_quotation(quotation_id: str, payload: dict = Depends(verify_admin)):
+    quotation = await db.quotations.find_one({"quotation_id": quotation_id, "client_id": payload.get('client_id')}, {"_id": 0})
+    if not quotation:
+        raise HTTPException(status_code=404, detail="Quotation not found")
+    return quotation
+
+@api_router.put("/admin/quotations/{quotation_id}/status")
+async def update_quotation_status(quotation_id: str, status_data: dict, payload: dict = Depends(verify_admin)):
+    new_status = status_data.get('status')
+    updates = {"status": new_status}
+    
+    if new_status == 'sent':
+        updates['sent_at'] = datetime.now(timezone.utc).isoformat()
+    elif new_status == 'accepted':
+        updates['accepted_at'] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.quotations.find_one_and_update(
+        {"quotation_id": quotation_id, "client_id": payload.get('client_id')},
+        {"$set": updates},
+        return_document=True
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Quotation not found")
+    
+    result.pop('_id', None)
+    return result
+
+# Invoice Management
+async def generate_invoice_number(client_id: str) -> str:
+    count = await db.invoices.count_documents({"client_id": client_id})
+    return f"INV-{count + 1:04d}"
+
+@api_router.post("/admin/invoices/from-quotation/{quotation_id}", response_model=Invoice)
+async def create_invoice_from_quotation(quotation_id: str, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    
+    quotation = await db.quotations.find_one({"quotation_id": quotation_id, "client_id": client_id}, {"_id": 0})
+    if not quotation:
+        raise HTTPException(status_code=404, detail="Quotation not found")
+    
+    invoice_number = await generate_invoice_number(client_id)
+    
+    invoice = Invoice(
+        invoice_number=invoice_number,
+        client_id=client_id,
+        quotation_id=quotation_id,
+        lead_id=quotation['lead_id'],
+        issue_date=datetime.now(timezone.utc).isoformat()[:10],
+        items=quotation['items'],
+        subtotal=quotation['subtotal'],
+        discount_amount=quotation['discount_amount'],
+        tax_amount=quotation['tax_amount'],
+        total_amount=quotation['total_amount'],
+        paid_amount=0,
+        balance_due=quotation['total_amount'],
+        status='unpaid',
+        payments=[]
+    )
+    
+    await db.invoices.insert_one(invoice.model_dump())
+    
+    # Update quotation status
+    await db.quotations.update_one(
+        {"quotation_id": quotation_id},
+        {"$set": {"status": "accepted"}}
+    )
+    
+    return invoice
+
+@api_router.get("/admin/invoices", response_model=List[Invoice])
+async def get_invoices(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    invoices = await db.invoices.find({"client_id": client_id}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return invoices
+
+@api_router.post("/admin/invoices/{invoice_id}/payments")
+async def add_payment(invoice_id: str, payment_data: dict, payload: dict = Depends(verify_admin)):
+    invoice = await db.invoices.find_one({"invoice_id": invoice_id, "client_id": payload.get('client_id')}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    payment = PaymentRecord(
+        amount=payment_data['amount'],
+        payment_date=payment_data.get('payment_date', datetime.now(timezone.utc).isoformat()[:10]),
+        payment_method=payment_data.get('payment_method'),
+        notes=payment_data.get('notes')
+    )
+    
+    new_paid_amount = invoice['paid_amount'] + payment.amount
+    new_balance = invoice['total_amount'] - new_paid_amount
+    
+    if new_balance <= 0:
+        new_status = 'paid'
+    elif new_paid_amount > 0:
+        new_status = 'partially_paid'
+    else:
+        new_status = 'unpaid'
+    
+    result = await db.invoices.find_one_and_update(
+        {"invoice_id": invoice_id},
+        {
+            "$push": {"payments": payment.model_dump()},
+            "$set": {
+                "paid_amount": new_paid_amount,
+                "balance_due": new_balance,
+                "status": new_status
+            }
+        },
+        return_document=True
+    )
+    
+    result.pop('_id', None)
+    return result
+
+# Expense Management
+@api_router.post("/admin/expenses", response_model=Expense)
+async def create_expense(expense_data: ExpenseCreate, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    expense = Expense(client_id=client_id, **expense_data.model_dump())
+    await db.expenses.insert_one(expense.model_dump())
+    
+    # Update event totals
+    event = await db.events.find_one({"event_id": expense_data.event_id}, {"_id": 0})
+    if event:
+        total_expenses = await db.expenses.aggregate([
+            {"$match": {"event_id": expense_data.event_id}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        
+        new_total_expenses = total_expenses[0]['total'] if total_expenses else 0
+        new_profit = event.get('revenue', 0) - new_total_expenses
+        
+        await db.events.update_one(
+            {"event_id": expense_data.event_id},
+            {"$set": {"total_expenses": new_total_expenses, "profit": new_profit}}
+        )
+    
+    return expense
+
+@api_router.get("/admin/expenses")
+async def get_expenses(payload: dict = Depends(verify_admin), event_id: Optional[str] = None):
+    client_id = payload.get('client_id')
+    query = {"client_id": client_id}
+    if event_id:
+        query["event_id"] = event_id
+    expenses = await db.expenses.find(query, {"_id": 0}).sort("expense_date", -1).to_list(1000)
+    return expenses
+
+# Event Management
+@api_router.post("/admin/events", response_model=Event)
+async def create_event(event_data: dict, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    event = Event(client_id=client_id, **event_data)
+    await db.events.insert_one(event.model_dump())
+    return event
+
+@api_router.get("/admin/events", response_model=List[Event])
+async def get_events(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    events = await db.events.find({"client_id": client_id}, {"_id": 0}).sort("event_date", -1).to_list(1000)
+    return events
+
+@api_router.put("/admin/events/{event_id}", response_model=Event)
+async def update_event(event_id: str, updates: dict, payload: dict = Depends(verify_admin)):
+    result = await db.events.find_one_and_update(
+        {"event_id": event_id, "client_id": payload.get('client_id')},
+        {"$set": updates},
+        return_document=True
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Event not found")
+    result.pop('_id', None)
+    return result
+
+# Reports
+@api_router.get("/admin/reports/revenue")
+async def get_revenue_report(payload: dict = Depends(verify_admin), period: str = 'monthly', year: Optional[int] = None):
+    client_id = payload.get('client_id')
+    year = year or datetime.now().year
+    
+    if period == 'monthly':
+        pipeline = [
+            {"$match": {"client_id": client_id}},
+            {"$addFields": {
+                "month": {"$substr": ["$issue_date", 5, 2]},
+                "year": {"$substr": ["$issue_date", 0, 4]}
+            }},
+            {"$match": {"year": str(year)}},
+            {"$group": {
+                "_id": "$month",
+                "total_revenue": {"$sum": "$total_amount"},
+                "total_paid": {"$sum": "$paid_amount"}
+            }},
+            {"$sort": {"_id": 1}}
+        ]
+    else:  # yearly
+        pipeline = [
+            {"$match": {"client_id": client_id}},
+            {"$addFields": {"year": {"$substr": ["$issue_date", 0, 4]}}},
+            {"$group": {
+                "_id": "$year",
+                "total_revenue": {"$sum": "$total_amount"},
+                "total_paid": {"$sum": "$paid_amount"}
+            }},
+            {"$sort": {"_id": 1}}
+        ]
+    
+    results = await db.invoices.aggregate(pipeline).to_list(100)
+    return results
+
+@api_router.get("/admin/reports/pending-payments")
+async def get_pending_payments_report(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    pending_invoices = await db.invoices.find({
+        "client_id": client_id,
+        "balance_due": {"$gt": 0}
+    }, {"_id": 0}).sort("issue_date", 1).to_list(1000)
+    return pending_invoices
+
+@api_router.get("/admin/reports/lead-conversion")
+async def get_lead_conversion_report(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    
+    total_leads = await db.leads.count_documents({"client_id": client_id})
+    confirmed_leads = await db.leads.count_documents({"client_id": client_id, "status": LeadStatus.CONFIRMED})
+    lost_leads = await db.leads.count_documents({"client_id": client_id, "status": LeadStatus.LOST})
+    
+    conversion_rate = (confirmed_leads / total_leads * 100) if total_leads > 0 else 0
+    
+    return {
+        "total_leads": total_leads,
+        "confirmed_leads": confirmed_leads,
+        "lost_leads": lost_leads,
+        "conversion_rate": round(conversion_rate, 2)
+    }
+
+@api_router.get("/admin/reports/event-profit")
+async def get_event_profit_report(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    events = await db.events.find({
+        "client_id": client_id,
+        "status": "completed"
+    }, {"_id": 0}).sort("event_date", -1).to_list(1000)
+    return events
+
+
 # Include router
 app.include_router(api_router)
 
