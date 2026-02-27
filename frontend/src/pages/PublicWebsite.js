@@ -6,6 +6,7 @@ import api from '../utils/api';
 import { PublicHome } from '../components/public/PublicHome';
 import { PublicAbout } from '../components/public/PublicAbout';
 import { PublicServices } from '../components/public/PublicServices';
+import { PublicPricing } from '../components/public/PublicPricing';
 import { PublicBooking } from '../components/public/PublicBooking';
 import { PublicHeader } from '../components/public/PublicHeader';
 import { PublicFooter } from '../components/public/PublicFooter';
