@@ -78,6 +78,7 @@ export const PublicWebsite = () => {
         <Route path="/" element={<PublicHome content={content} offers={offers} services={services} clientId={clientId} />} />
         <Route path="/about" element={<PublicAbout content={content} />} />
         <Route path="/services" element={<PublicServices services={services} offers={offers} />} />
+        <Route path="/pricing" element={<PublicPricing clientId={clientId} />} />
         <Route path="/booking" element={<PublicBooking clientId={clientId} />} />
       </Routes>
       
