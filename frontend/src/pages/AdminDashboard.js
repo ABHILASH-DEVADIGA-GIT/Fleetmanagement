@@ -139,6 +139,13 @@ export const AdminDashboard = () => {
           <div className="p-6 lg:p-12">
             <Routes>
               <Route path="/" element={<AdminOverview />} />
+              <Route path="/calendar" element={<CalendarView />} />
+              <Route path="/leads" element={<LeadManagement />} />
+              <Route path="/packages" element={<PackageManagement />} />
+              <Route path="/quotations" element={<QuotationManagement />} />
+              <Route path="/invoices" element={<InvoiceManagement />} />
+              <Route path="/expenses" element={<ExpenseManagement />} />
+              <Route path="/reports" element={<ReportsView />} />
               <Route path="/content" element={<ContentManagement />} />
               <Route path="/services" element={<ServiceManagement />} />
               <Route path="/offers" element={<OfferManagement />} />
