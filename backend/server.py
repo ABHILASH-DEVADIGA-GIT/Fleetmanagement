@@ -1361,6 +1361,164 @@ async def add_payment(invoice_id: str, payment_data: dict, payload: dict = Depen
     result.pop('_id', None)
     return result
 
+# Create Invoice directly (without quotation)
+class InvoiceCreate(BaseModel):
+    customer_name: str
+    customer_phone: str
+    customer_email: Optional[str] = None
+    items: List[QuotationItem]
+    discount_percentage: float = 0
+    discount_amount: float = 0
+    tax_percentage: float = 0
+    notes: Optional[str] = None
+    event_date: Optional[str] = None
+
+@api_router.post("/admin/invoices", response_model=Invoice)
+async def create_invoice(invoice_data: InvoiceCreate, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    
+    # Calculate totals
+    subtotal = sum(item.price * item.quantity for item in invoice_data.items)
+    discount_amount = invoice_data.discount_amount or (subtotal * invoice_data.discount_percentage / 100)
+    tax_amount = (subtotal - discount_amount) * invoice_data.tax_percentage / 100
+    total_amount = subtotal - discount_amount + tax_amount
+    
+    invoice_number = await generate_invoice_number(client_id)
+    
+    # Create a lead for the customer if needed
+    lead = Lead(
+        client_id=client_id,
+        name=invoice_data.customer_name,
+        phone=invoice_data.customer_phone,
+        email=invoice_data.customer_email,
+        source='manual'
+    )
+    await db.leads.insert_one(lead.model_dump())
+    
+    invoice = Invoice(
+        invoice_number=invoice_number,
+        client_id=client_id,
+        quotation_id='',
+        lead_id=lead.lead_id,
+        issue_date=datetime.now(timezone.utc).isoformat()[:10],
+        event_date=invoice_data.event_date,
+        items=[item.model_dump() for item in invoice_data.items],
+        subtotal=subtotal,
+        discount_amount=discount_amount,
+        tax_amount=tax_amount,
+        total_amount=total_amount,
+        paid_amount=0,
+        balance_due=total_amount,
+        status='unpaid',
+        payments=[]
+    )
+    
+    await db.invoices.insert_one(invoice.model_dump())
+    return invoice
+
+@api_router.put("/admin/invoices/{invoice_id}")
+async def update_invoice(invoice_id: str, updates: dict, payload: dict = Depends(verify_admin)):
+    result = await db.invoices.find_one_and_update(
+        {"invoice_id": invoice_id, "client_id": payload.get('client_id')},
+        {"$set": updates},
+        return_document=True
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    result.pop('_id', None)
+    return result
+
+@api_router.delete("/admin/invoices/{invoice_id}")
+async def delete_invoice(invoice_id: str, payload: dict = Depends(verify_admin)):
+    result = await db.invoices.delete_one({"invoice_id": invoice_id, "client_id": payload.get('client_id')})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    return {"message": "Invoice deleted successfully"}
+
+# Invoice PDF Data
+@api_router.get("/admin/invoices/{invoice_id}/pdf-data")
+async def get_invoice_pdf_data(invoice_id: str, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    
+    # Get invoice
+    invoice = await db.invoices.find_one({"invoice_id": invoice_id, "client_id": client_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    # Get client/admin details
+    client = await db.clients.find_one({"client_id": client_id}, {"_id": 0})
+    
+    # Get lead (customer) details
+    lead = await db.leads.find_one({"lead_id": invoice['lead_id']}, {"_id": 0})
+    
+    return {
+        "invoice": invoice,
+        "client": client,
+        "customer": lead
+    }
+
+# Walk-in Appointment (Block time period)
+class WalkInAppointment(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    walkin_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    title: str
+    start_date: str
+    end_date: str
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class WalkInCreate(BaseModel):
+    title: str
+    start_date: str
+    end_date: str
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    notes: Optional[str] = None
+
+@api_router.post("/admin/walkin-appointments", response_model=WalkInAppointment)
+async def create_walkin(walkin_data: WalkInCreate, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    walkin = WalkInAppointment(client_id=client_id, **walkin_data.model_dump())
+    await db.walkin_appointments.insert_one(walkin.model_dump())
+    return walkin
+
+@api_router.get("/admin/walkin-appointments", response_model=List[WalkInAppointment])
+async def get_walkins(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    walkins = await db.walkin_appointments.find({"client_id": client_id}, {"_id": 0}).to_list(1000)
+    return walkins
+
+@api_router.delete("/admin/walkin-appointments/{walkin_id}")
+async def delete_walkin(walkin_id: str, payload: dict = Depends(verify_admin)):
+    result = await db.walkin_appointments.delete_one({"walkin_id": walkin_id, "client_id": payload.get('client_id')})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Walk-in appointment not found")
+    return {"message": "Walk-in appointment deleted"}
+
+# Update booking status
+@api_router.put("/admin/bookings/{booking_id}/status")
+async def update_booking_status(booking_id: str, status_data: dict, payload: dict = Depends(verify_admin)):
+    result = await db.bookings.find_one_and_update(
+        {"booking_id": booking_id, "client_id": payload.get('client_id')},
+        {"$set": {"status": status_data.get('status')}},
+        return_document=True
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    result.pop('_id', None)
+    return result
+
+# Delete expense
+@api_router.delete("/admin/expenses/{expense_id}")
+async def delete_expense(expense_id: str, payload: dict = Depends(verify_admin)):
+    result = await db.expenses.delete_one({"expense_id": expense_id, "client_id": payload.get('client_id')})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return {"message": "Expense deleted"}
+
 # Expense Management
 @api_router.post("/admin/expenses", response_model=Expense)
 async def create_expense(expense_data: ExpenseCreate, payload: dict = Depends(verify_admin)):
