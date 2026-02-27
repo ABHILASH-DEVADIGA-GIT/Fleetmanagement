@@ -199,6 +199,196 @@ class Booking(BaseModel):
     client_id: str
     name: str
     phone: str
+
+# ============= Business Management Models =============
+
+# Lead Models
+class LeadSource:
+    WEBSITE = 'website'
+    MANUAL = 'manual'
+    INSTAGRAM = 'instagram'
+    REFERRAL = 'referral'
+    OTHER = 'other'
+
+class LeadStatus:
+    NEW = 'new'
+    CONTACTED = 'contacted'
+    FOLLOW_UP = 'follow_up'
+    QUOTATION_SENT = 'quotation_sent'
+    CONFIRMED = 'confirmed'
+    LOST = 'lost'
+
+class LeadCreate(BaseModel):
+    name: str
+    phone: str
+    email: Optional[EmailStr] = None
+    event_date: Optional[str] = None
+    event_type: Optional[str] = None
+    source: str = LeadSource.WEBSITE
+    notes: Optional[str] = None
+
+class Lead(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    lead_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    name: str
+    phone: str
+    email: Optional[EmailStr] = None
+    event_date: Optional[str] = None
+    event_type: Optional[str] = None
+    source: str
+    status: str = LeadStatus.NEW
+    assigned_package_id: Optional[str] = None
+    follow_up_date: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class LeadNote(BaseModel):
+    note_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    lead_id: str
+    note: str
+    created_by: str
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+# Package Models
+class PackageCreate(BaseModel):
+    name: str
+    base_price: float
+    description: Optional[str] = None
+    included_services: List[str] = []
+    default_discount: float = 0
+
+class Package(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    package_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    name: str
+    base_price: float
+    description: Optional[str] = None
+    included_services: List[str] = []
+    default_discount: float = 0
+    is_active: bool = True
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+# Add-on Models
+class AddOnCreate(BaseModel):
+    name: str
+    price: float
+    description: Optional[str] = None
+
+class AddOn(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    addon_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    name: str
+    price: float
+    description: Optional[str] = None
+    is_active: bool = True
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+# Quotation Models
+class QuotationItem(BaseModel):
+    item_type: str  # 'package' | 'addon' | 'custom'
+    item_id: Optional[str] = None
+    name: str
+    price: float
+    quantity: int = 1
+
+class QuotationCreate(BaseModel):
+    lead_id: str
+    items: List[QuotationItem]
+    discount_percentage: float = 0
+    discount_amount: float = 0
+    tax_percentage: float = 0
+    notes: Optional[str] = None
+
+class Quotation(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    quotation_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    quotation_number: str
+    client_id: str
+    lead_id: str
+    items: List[QuotationItem]
+    subtotal: float
+    discount_percentage: float
+    discount_amount: float
+    tax_percentage: float
+    tax_amount: float
+    total_amount: float
+    notes: Optional[str] = None
+    status: str = 'draft'  # draft, sent, accepted, rejected
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    sent_at: Optional[str] = None
+    accepted_at: Optional[str] = None
+
+# Invoice Models
+class PaymentRecord(BaseModel):
+    payment_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    amount: float
+    payment_date: str
+    payment_method: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class Invoice(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    invoice_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    invoice_number: str
+    client_id: str
+    quotation_id: str
+    lead_id: str
+    issue_date: str
+    event_date: Optional[str] = None
+    items: List[QuotationItem]
+    subtotal: float
+    discount_amount: float
+    tax_amount: float
+    total_amount: float
+    paid_amount: float = 0
+    balance_due: float
+    status: str = 'unpaid'  # unpaid, partially_paid, paid
+    payments: List[PaymentRecord] = []
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+# Expense Models
+class ExpenseCreate(BaseModel):
+    event_id: str
+    category: str  # travel, equipment, assistant, other
+    amount: float
+    description: Optional[str] = None
+    expense_date: str
+
+class Expense(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    expense_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    event_id: str
+    category: str
+    amount: float
+    description: Optional[str] = None
+    expense_date: str
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+# Event Models (extends Booking)
+class Event(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    event_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    lead_id: Optional[str] = None
+    booking_id: Optional[str] = None
+    invoice_id: Optional[str] = None
+    name: str
+    event_type: str
+    event_date: str
+    event_time: Optional[str] = None
+    location: Optional[str] = None
+    status: str = 'inquiry'  # inquiry, confirmed, completed, cancelled
+    revenue: float = 0
+    total_expenses: float = 0
+    profit: float = 0
+    notes: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
     email: Optional[EmailStr] = None
     event_type: str
     event_date: str
