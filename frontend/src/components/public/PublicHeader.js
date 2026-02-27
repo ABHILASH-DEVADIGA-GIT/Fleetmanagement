@@ -20,6 +20,7 @@ export const PublicHeader = ({ client, enabledLanguages }) => {
     { label: { en: 'Home', kn: 'ಮುಖಪುಟ', hi: 'घर' }, path: '' },
     { label: { en: 'About', kn: 'ಬಗ್ಗೆ', hi: 'के बारे में' }, path: 'about' },
     { label: { en: 'Services', kn: 'ಸೇವೆಗಳು', hi: 'सेवाएं' }, path: 'services' },
+    { label: { en: 'Pricing', kn: 'ಬೆಲೆ', hi: 'मूल्य निर्धारण' }, path: 'pricing' },
     { label: { en: 'Booking', kn: 'ಬುಕಿಂಗ್', hi: 'बुकिंग' }, path: 'booking' },
   ];
 
