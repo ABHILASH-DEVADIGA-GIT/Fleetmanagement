@@ -79,6 +79,18 @@ class TokenResponse(BaseModel):
     token: str
     user: Dict[str, Any]
 
+# Available Modules for clients
+class AvailableModules:
+    ABOUT = 'about'
+    SERVICES = 'services'
+    GALLERY = 'gallery'
+    BOOKING = 'booking'
+    PRODUCTS = 'products'
+    OFFERS = 'offers'
+    CONTACT = 'contact'
+
+DEFAULT_MODULES = ['about', 'services', 'gallery', 'booking', 'offers', 'contact']
+
 # Client Models
 class ClientCreate(BaseModel):
     business_name: str
@@ -88,6 +100,10 @@ class ClientCreate(BaseModel):
     subscription_plan: str = 'basic'
     enabled_languages: List[str] = ['en']
     theme: str = ThemeType.LIGHT
+    enabled_modules: List[str] = Field(default_factory=lambda: DEFAULT_MODULES.copy())
+    primary_color: str = '#1e40af'
+    logo_url: Optional[str] = None
+    admin_password: Optional[str] = None  # For auto-creating admin account
 
 class Client(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -99,6 +115,9 @@ class Client(BaseModel):
     subscription_plan: str
     enabled_languages: List[str]
     theme: str
+    enabled_modules: List[str] = Field(default_factory=lambda: DEFAULT_MODULES.copy())
+    primary_color: str = '#1e40af'
+    logo_url: Optional[str] = None
     status: str = 'active'
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
@@ -402,15 +421,95 @@ class GalleryImage(BaseModel):
     is_featured: bool = False
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
+# Product Catalog Models
+class ProductCreate(BaseModel):
+    name: MultiLangContent
+    description: MultiLangContent
+    images: List[str] = []
+    base_price: float
+    discount_percentage: float = 0
+    category: Optional[str] = None
+    is_active: bool = True
 
-    email: Optional[EmailStr] = None
-    event_type: str
-    event_date: str
-    event_time: Optional[str] = None
-    location: Optional[str] = None
-    message: Optional[str] = None
-    status: str = 'pending'
+class Product(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    product_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    name: MultiLangContent
+    description: MultiLangContent
+    images: List[str] = []
+    base_price: float
+    discount_percentage: float = 0
+    final_price: float = 0  # Calculated field
+    category: Optional[str] = None
+    is_active: bool = True
+    display_order: int = 0
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+# Product Category Model
+class ProductCategory(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    category_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    name: MultiLangContent
+    display_order: int = 0
+    is_active: bool = True
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+# Enhanced Page Content Model for fully editable sections
+class HeroSection(BaseModel):
+    background_image: Optional[str] = None
+    logo_url: Optional[str] = None
+    headline: MultiLangContent = Field(default_factory=MultiLangContent)
+    sub_headline: MultiLangContent = Field(default_factory=MultiLangContent)
+    cta_text: MultiLangContent = Field(default_factory=MultiLangContent)
+    cta_link: Optional[str] = None
+
+class AboutSectionEnhanced(BaseModel):
+    title: MultiLangContent = Field(default_factory=MultiLangContent)
+    description: MultiLangContent = Field(default_factory=MultiLangContent)
+    image_url: Optional[str] = None
+    stats: List[Dict[str, Any]] = []  # [{label: "Years", value: "10+"}]
+
+class ServicesSectionContent(BaseModel):
+    title: MultiLangContent = Field(default_factory=MultiLangContent)
+    subtitle: MultiLangContent = Field(default_factory=MultiLangContent)
+
+class GallerySectionContent(BaseModel):
+    title: MultiLangContent = Field(default_factory=MultiLangContent)
+    subtitle: MultiLangContent = Field(default_factory=MultiLangContent)
+
+class ProductsSectionContent(BaseModel):
+    title: MultiLangContent = Field(default_factory=MultiLangContent)
+    subtitle: MultiLangContent = Field(default_factory=MultiLangContent)
+
+class BookingSectionContent(BaseModel):
+    title: MultiLangContent = Field(default_factory=MultiLangContent)
+    subtitle: MultiLangContent = Field(default_factory=MultiLangContent)
+
+class ContactSectionContent(BaseModel):
+    title: MultiLangContent = Field(default_factory=MultiLangContent)
+    subtitle: MultiLangContent = Field(default_factory=MultiLangContent)
+    address: MultiLangContent = Field(default_factory=MultiLangContent)
+    map_embed_url: Optional[str] = None
+
+class FooterContent(BaseModel):
+    copyright_text: MultiLangContent = Field(default_factory=MultiLangContent)
+    social_links: Dict[str, str] = {}  # {facebook: url, instagram: url}
+
+class SiteContent(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    content_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    hero: HeroSection = Field(default_factory=HeroSection)
+    about: AboutSectionEnhanced = Field(default_factory=AboutSectionEnhanced)
+    services_section: ServicesSectionContent = Field(default_factory=ServicesSectionContent)
+    gallery_section: GallerySectionContent = Field(default_factory=GallerySectionContent)
+    products_section: ProductsSectionContent = Field(default_factory=ProductsSectionContent)
+    booking_section: BookingSectionContent = Field(default_factory=BookingSectionContent)
+    contact: ContactSectionContent = Field(default_factory=ContactSectionContent)
+    footer: FooterContent = Field(default_factory=FooterContent)
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 # Blocked Date Models
 class BlockedDateCreate(BaseModel):
@@ -548,9 +647,73 @@ async def get_current_user(payload: dict = Depends(verify_token)):
 
 @api_router.post("/super-admin/clients", response_model=Client)
 async def create_client(client_data: ClientCreate, _: dict = Depends(verify_super_admin)):
-    client = Client(**client_data.model_dump())
+    # Check for duplicate domain
+    if client_data.domain:
+        existing = await db.clients.find_one({"domain": client_data.domain}, {"_id": 0})
+        if existing:
+            raise HTTPException(status_code=400, detail="Domain already in use")
+    
+    # Create client without admin_password field
+    client_dict = client_data.model_dump()
+    admin_password = client_dict.pop('admin_password', None) or 'admin123'
+    
+    client = Client(**client_dict)
     await db.clients.insert_one(client.model_dump())
     
+    # Auto-create admin user for this client
+    hashed_pw = hash_password(admin_password)
+    admin_user = User(
+        email=client_data.email,
+        role=UserRole.ADMIN,
+        client_id=client.client_id,
+        full_name=f"{client_data.business_name} Admin"
+    )
+    admin_dict = admin_user.model_dump()
+    admin_dict['password'] = hashed_pw
+    await db.users.insert_one(admin_dict)
+    
+    # Create default site content
+    site_content = SiteContent(
+        client_id=client.client_id,
+        hero=HeroSection(
+            headline=MultiLangContent(en="Welcome to " + client_data.business_name, kn="ಸ್ವಾಗತ", hi="स्वागत है"),
+            sub_headline=MultiLangContent(en="Your trusted service partner", kn="ನಿಮ್ಮ ನಂಬಿಕೆಯ ಸೇವಾ ಪಾಲುದಾರ", hi="आपका विश्वसनीय सेवा भागीदार"),
+            cta_text=MultiLangContent(en="Get Started", kn="ಪ್ರಾರಂಭಿಸಿ", hi="शुरू करें")
+        ),
+        about=AboutSectionEnhanced(
+            title=MultiLangContent(en="About Us", kn="ನಮ್ಮ ಬಗ್ಗೆ", hi="हमारे बारे में"),
+            description=MultiLangContent(en="We provide professional services with dedication and excellence.", kn="ನಾವು ಸಮರ್ಪಣೆ ಮತ್ತು ಶ್ರೇಷ್ಠತೆಯೊಂದಿಗೆ ವೃತ್ತಿಪರ ಸೇವೆಗಳನ್ನು ಒದಗಿಸುತ್ತೇವೆ.", hi="हम समर्पण और उत्कृष्टता के साथ पेशेवर सेवाएं प्रदान करते हैं।"),
+            stats=[{"label": "Years", "value": "10+"}, {"label": "Clients", "value": "500+"}]
+        ),
+        services_section=ServicesSectionContent(
+            title=MultiLangContent(en="Our Services", kn="ನಮ್ಮ ಸೇವೆಗಳು", hi="हमारी सेवाएं"),
+            subtitle=MultiLangContent(en="What we offer", kn="ನಾವು ಏನು ನೀಡುತ್ತೇವೆ", hi="हम क्या प्रदान करते हैं")
+        ),
+        gallery_section=GallerySectionContent(
+            title=MultiLangContent(en="Our Gallery", kn="ನಮ್ಮ ಗ್ಯಾಲರಿ", hi="हमारी गैलरी"),
+            subtitle=MultiLangContent(en="See our work", kn="ನಮ್ಮ ಕೆಲಸ ನೋಡಿ", hi="हमारा काम देखें")
+        ),
+        products_section=ProductsSectionContent(
+            title=MultiLangContent(en="Our Products", kn="ನಮ್ಮ ಉತ್ಪನ್ನಗಳು", hi="हमारे उत्पाद"),
+            subtitle=MultiLangContent(en="Explore our catalog", kn="ನಮ್ಮ ಕ್ಯಾಟಲಾಗ್ ಅನ್ವೇಷಿಸಿ", hi="हमारी सूची का अन्वेषण करें")
+        ),
+        booking_section=BookingSectionContent(
+            title=MultiLangContent(en="Book Appointment", kn="ಅಪಾಯಿಂಟ್ಮೆಂಟ್ ಬುಕ್ ಮಾಡಿ", hi="अपॉइंटमेंट बुक करें"),
+            subtitle=MultiLangContent(en="Schedule your session", kn="ನಿಮ್ಮ ಸೆಷನ್ ಶೆಡ್ಯೂಲ್ ಮಾಡಿ", hi="अपना सत्र शेड्यूल करें")
+        ),
+        contact=ContactSectionContent(
+            title=MultiLangContent(en="Contact Us", kn="ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ", hi="संपर्क करें"),
+            subtitle=MultiLangContent(en="Get in touch", kn="ಸಂಪರ್ಕದಲ್ಲಿರಿ", hi="संपर्क में रहें"),
+            address=MultiLangContent(en="Your Address Here", kn="ನಿಮ್ಮ ವಿಳಾಸ", hi="आपका पता")
+        ),
+        footer=FooterContent(
+            copyright_text=MultiLangContent(en=f"© 2025 {client_data.business_name}. All rights reserved.", kn=f"© 2025 {client_data.business_name}. ಎಲ್ಲಾ ಹಕ್ಕುಗಳನ್ನು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ.", hi=f"© 2025 {client_data.business_name}. सर्वाधिकार सुरक्षित।"),
+            social_links={}
+        )
+    )
+    await db.site_content.insert_one(site_content.model_dump())
+    
+    # Also create legacy page_content for backward compatibility
     default_content = PageContent(
         client_id=client.client_id,
         banner=BannerSection(
@@ -1650,8 +1813,264 @@ async def get_event_profit_report(payload: dict = Depends(verify_admin)):
     }, {"_id": 0}).sort("event_date", -1).to_list(1000)
     return events
 
+# ============= Product Management APIs =============
 
-# Include router
+@api_router.post("/admin/products", response_model=Product)
+async def create_product(product_data: ProductCreate, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    
+    # Calculate final price
+    final_price = product_data.base_price * (1 - product_data.discount_percentage / 100)
+    
+    product = Product(
+        client_id=client_id,
+        final_price=round(final_price, 2),
+        **product_data.model_dump()
+    )
+    await db.products.insert_one(product.model_dump())
+    return product
+
+@api_router.get("/admin/products", response_model=List[Product])
+async def get_products(payload: dict = Depends(verify_admin), category: Optional[str] = None):
+    client_id = payload.get('client_id')
+    query = {"client_id": client_id}
+    if category:
+        query["category"] = category
+    products = await db.products.find(query, {"_id": 0}).sort("display_order", 1).to_list(1000)
+    return products
+
+@api_router.get("/admin/products/{product_id}", response_model=Product)
+async def get_product(product_id: str, payload: dict = Depends(verify_admin)):
+    product = await db.products.find_one(
+        {"product_id": product_id, "client_id": payload.get('client_id')}, 
+        {"_id": 0}
+    )
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
+
+@api_router.put("/admin/products/{product_id}", response_model=Product)
+async def update_product(product_id: str, updates: dict, payload: dict = Depends(verify_admin)):
+    # Recalculate final price if base_price or discount changed
+    if 'base_price' in updates or 'discount_percentage' in updates:
+        existing = await db.products.find_one({"product_id": product_id}, {"_id": 0})
+        if existing:
+            base = updates.get('base_price', existing.get('base_price', 0))
+            disc = updates.get('discount_percentage', existing.get('discount_percentage', 0))
+            updates['final_price'] = round(base * (1 - disc / 100), 2)
+    
+    result = await db.products.find_one_and_update(
+        {"product_id": product_id, "client_id": payload.get('client_id')},
+        {"$set": updates},
+        return_document=True
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Product not found")
+    result.pop('_id', None)
+    return result
+
+@api_router.delete("/admin/products/{product_id}")
+async def delete_product(product_id: str, payload: dict = Depends(verify_admin)):
+    result = await db.products.delete_one({"product_id": product_id, "client_id": payload.get('client_id')})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return {"message": "Product deleted"}
+
+# ============= Product Category APIs =============
+
+@api_router.post("/admin/product-categories")
+async def create_product_category(category_data: dict, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    category = ProductCategory(client_id=client_id, name=MultiLangContent(**category_data.get('name', {})))
+    await db.product_categories.insert_one(category.model_dump())
+    return category
+
+@api_router.get("/admin/product-categories")
+async def get_product_categories(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    categories = await db.product_categories.find({"client_id": client_id}, {"_id": 0}).to_list(100)
+    return categories
+
+@api_router.delete("/admin/product-categories/{category_id}")
+async def delete_product_category(category_id: str, payload: dict = Depends(verify_admin)):
+    result = await db.product_categories.delete_one({"category_id": category_id, "client_id": payload.get('client_id')})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return {"message": "Category deleted"}
+
+# ============= Site Content Management APIs =============
+
+@api_router.get("/admin/site-content")
+async def get_site_content(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    content = await db.site_content.find_one({"client_id": client_id}, {"_id": 0})
+    if not content:
+        # Create default content
+        default = SiteContent(client_id=client_id)
+        await db.site_content.insert_one(default.model_dump())
+        content = default.model_dump()
+    return content
+
+@api_router.put("/admin/site-content")
+async def update_site_content(updates: dict, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    updates['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.site_content.find_one_and_update(
+        {"client_id": client_id},
+        {"$set": updates},
+        return_document=True,
+        upsert=True
+    )
+    result.pop('_id', None)
+    return result
+
+@api_router.put("/admin/site-content/{section}")
+async def update_site_section(section: str, updates: dict, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    
+    result = await db.site_content.find_one_and_update(
+        {"client_id": client_id},
+        {"$set": {section: updates, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        return_document=True,
+        upsert=True
+    )
+    result.pop('_id', None)
+    return result
+
+# ============= Gallery Management APIs =============
+
+@api_router.post("/admin/gallery")
+async def add_gallery_image(image_data: dict, payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    image = GalleryImage(client_id=client_id, **image_data)
+    await db.gallery.insert_one(image.model_dump())
+    return image
+
+@api_router.get("/admin/gallery")
+async def get_gallery(payload: dict = Depends(verify_admin)):
+    client_id = payload.get('client_id')
+    images = await db.gallery.find({"client_id": client_id}, {"_id": 0}).sort("display_order", 1).to_list(1000)
+    return images
+
+@api_router.put("/admin/gallery/{image_id}")
+async def update_gallery_image(image_id: str, updates: dict, payload: dict = Depends(verify_admin)):
+    result = await db.gallery.find_one_and_update(
+        {"image_id": image_id, "client_id": payload.get('client_id')},
+        {"$set": updates},
+        return_document=True
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Image not found")
+    result.pop('_id', None)
+    return result
+
+@api_router.delete("/admin/gallery/{image_id}")
+async def delete_gallery_image(image_id: str, payload: dict = Depends(verify_admin)):
+    result = await db.gallery.delete_one({"image_id": image_id, "client_id": payload.get('client_id')})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return {"message": "Image deleted"}
+
+# ============= Public APIs (for public website) =============
+
+@api_router.get("/public/site/{client_id}")
+async def get_public_site_data(client_id: str):
+    # Get client info
+    client = await db.clients.find_one({"client_id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Site not found")
+    
+    # Get site content
+    site_content = await db.site_content.find_one({"client_id": client_id}, {"_id": 0})
+    
+    # Get services (if module enabled)
+    services = []
+    if 'services' in client.get('enabled_modules', []):
+        services = await db.services.find({"client_id": client_id, "is_active": True}, {"_id": 0}).to_list(100)
+    
+    # Get gallery (if module enabled)
+    gallery = []
+    if 'gallery' in client.get('enabled_modules', []):
+        gallery = await db.gallery.find({"client_id": client_id}, {"_id": 0}).sort("display_order", 1).to_list(100)
+    
+    # Get products (if module enabled)
+    products = []
+    product_categories = []
+    if 'products' in client.get('enabled_modules', []):
+        products = await db.products.find({"client_id": client_id, "is_active": True}, {"_id": 0}).sort("display_order", 1).to_list(1000)
+        product_categories = await db.product_categories.find({"client_id": client_id, "is_active": True}, {"_id": 0}).to_list(100)
+    
+    # Get offers (if module enabled)
+    offers = []
+    if 'offers' in client.get('enabled_modules', []):
+        offers = await db.offers.find({"client_id": client_id, "is_active": True}, {"_id": 0}).to_list(100)
+    
+    # Get packages for booking
+    packages = []
+    addons = []
+    if 'booking' in client.get('enabled_modules', []):
+        packages = await db.packages.find({"client_id": client_id, "is_active": True}, {"_id": 0}).to_list(100)
+        addons = await db.addons.find({"client_id": client_id, "is_active": True}, {"_id": 0}).to_list(100)
+    
+    return {
+        "client": client,
+        "site_content": site_content,
+        "services": services,
+        "gallery": gallery,
+        "products": products,
+        "product_categories": product_categories,
+        "offers": offers,
+        "packages": packages,
+        "addons": addons
+    }
+
+@api_router.get("/public/products/{client_id}")
+async def get_public_products(client_id: str, category: Optional[str] = None, sort: Optional[str] = None, min_price: Optional[float] = None, max_price: Optional[float] = None):
+    query = {"client_id": client_id, "is_active": True}
+    
+    if category:
+        query["category"] = category
+    
+    if min_price is not None:
+        query["final_price"] = {"$gte": min_price}
+    if max_price is not None:
+        if "final_price" in query:
+            query["final_price"]["$lte"] = max_price
+        else:
+            query["final_price"] = {"$lte": max_price}
+    
+    sort_order = [("display_order", 1)]
+    if sort == 'price_asc':
+        sort_order = [("final_price", 1)]
+    elif sort == 'price_desc':
+        sort_order = [("final_price", -1)]
+    
+    products = await db.products.find(query, {"_id": 0}).sort(sort_order).to_list(1000)
+    categories = await db.product_categories.find({"client_id": client_id, "is_active": True}, {"_id": 0}).to_list(100)
+    
+    return {"products": products, "categories": categories}
+
+@api_router.get("/public/products/{client_id}/{product_id}")
+async def get_public_product_detail(client_id: str, product_id: str):
+    product = await db.products.find_one(
+        {"product_id": product_id, "client_id": client_id, "is_active": True}, 
+        {"_id": 0}
+    )
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    client = await db.clients.find_one({"client_id": client_id}, {"_id": 0, "business_name": 1, "phone": 1, "email": 1})
+    return {"product": product, "client": client}
+
+# Domain-based client lookup
+@api_router.get("/public/site-by-domain")
+async def get_site_by_domain(domain: str):
+    client = await db.clients.find_one({"domain": domain, "status": "active"}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Site not found")
+    
+    return await get_public_site_data(client['client_id'])
 app.include_router(api_router)
 
 app.add_middleware(

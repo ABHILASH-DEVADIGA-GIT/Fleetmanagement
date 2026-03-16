@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, FileText, Briefcase, Tag, Calendar, Users, LogOut, Menu, X, Bell } from 'lucide-react';
+import { Home, FileText, Briefcase, Tag, Calendar, Users, LogOut, Menu, X, Bell, Package, Image, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { Button } from '../components/ui/button';
@@ -20,6 +20,9 @@ import { QuotationManagement } from '../components/admin/QuotationManagement';
 import { InvoiceManagement } from '../components/admin/InvoiceManagement';
 import { ExpenseManagement } from '../components/admin/ExpenseManagement';
 import { ReportsView } from '../components/admin/ReportsView';
+import { ProductManagement } from '../components/admin/ProductManagement';
+import { GalleryManagement } from '../components/admin/GalleryManagement';
+import { SiteContentEditor } from '../components/admin/SiteContentEditor';
 
 export const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -42,8 +45,11 @@ export const AdminDashboard = () => {
     { path: '/admin/invoices', label: 'Invoices', icon: FileText },
     { path: '/admin/expenses', label: 'Expenses', icon: Tag },
     { path: '/admin/reports', label: 'Reports', icon: FileText },
-    { path: '/admin/content', label: 'Website', icon: FileText },
+    { divider: true, label: 'Website' },
+    { path: '/admin/site-content', label: 'Site Content', icon: Globe },
     { path: '/admin/services', label: 'Services', icon: Briefcase },
+    { path: '/admin/products', label: 'Products', icon: Package },
+    { path: '/admin/gallery', label: 'Gallery', icon: Image },
     { path: '/admin/offers', label: 'Offers', icon: Tag },
     { path: '/admin/bookings', label: 'Bookings', icon: Calendar },
     { path: '/admin/users', label: 'Users', icon: Users },
@@ -67,17 +73,23 @@ export const AdminDashboard = () => {
                   <p className="font-ui text-xs text-muted-foreground uppercase tracking-wider mt-1">Admin Panel</p>
                 </div>
 
-                <nav className="flex-1 space-y-2">
-                  {menuItems.map((item) => (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className="flex items-center gap-3 px-4 py-3 rounded-sm hover:bg-muted transition-colors font-ui text-sm"
-                      data-testid={`nav-${item.label.toLowerCase()}`}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {item.label}
-                    </Link>
+                <nav className="flex-1 space-y-1 overflow-y-auto">
+                  {menuItems.map((item, idx) => (
+                    item.divider ? (
+                      <div key={idx} className="pt-4 pb-2">
+                        <p className="px-4 text-xs text-muted-foreground uppercase tracking-wider">{item.label}</p>
+                      </div>
+                    ) : (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className="flex items-center gap-3 px-4 py-2.5 rounded-sm hover:bg-muted transition-colors font-ui text-sm"
+                        data-testid={`nav-${item.label.toLowerCase()}`}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    )
                   ))}
                 </nav>
 
@@ -146,8 +158,11 @@ export const AdminDashboard = () => {
               <Route path="/invoices" element={<InvoiceManagement />} />
               <Route path="/expenses" element={<ExpenseManagement />} />
               <Route path="/reports" element={<ReportsView />} />
+              <Route path="/site-content" element={<SiteContentEditor />} />
               <Route path="/content" element={<ContentManagement />} />
               <Route path="/services" element={<ServiceManagement />} />
+              <Route path="/products" element={<ProductManagement />} />
+              <Route path="/gallery" element={<GalleryManagement />} />
               <Route path="/offers" element={<OfferManagement />} />
               <Route path="/bookings" element={<BookingManagement />} />
               <Route path="/users" element={<AdminUserManagement />} />

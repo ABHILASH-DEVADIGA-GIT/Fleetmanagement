@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useParams } from 'react-router-dom';
+import { Routes, Route, useParams, Navigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import api from '../utils/api';
@@ -10,38 +10,37 @@ import { PublicPricing } from '../components/public/PublicPricing';
 import { PublicBooking } from '../components/public/PublicBooking';
 import { PublicHeader } from '../components/public/PublicHeader';
 import { PublicFooter } from '../components/public/PublicFooter';
+import { PublicGallery } from '../components/public/PublicGallery';
+import { PublicProducts } from '../components/public/PublicProducts';
 import { Loader2 } from 'lucide-react';
 
 export const PublicWebsite = () => {
   const { clientId } = useParams();
-  const [client, setClient] = useState(null);
-  const [content, setContent] = useState(null);
-  const [services, setServices] = useState([]);
-  const [offers, setOffers] = useState([]);
+  const [siteData, setSiteData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { changeLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [clientRes, contentRes, servicesRes, offersRes] = await Promise.all([
-          api.get(`/public/clients/${clientId}`),
-          api.get(`/public/content/${clientId}`),
-          api.get(`/public/services/${clientId}`),
-          api.get(`/public/offers/${clientId}`),
-        ]);
+        // Use the new consolidated API
+        const response = await api.get(`/public/site/${clientId}`);
+        setSiteData(response.data);
         
-        setClient(clientRes.data);
-        setContent(contentRes.data);
-        setServices(servicesRes.data);
-        setOffers(offersRes.data);
-        
-        if (clientRes.data.theme !== theme) {
+        // Apply client theme
+        if (response.data.client?.theme && response.data.client.theme !== theme) {
           toggleTheme();
+        }
+        
+        // Apply primary color as CSS variable
+        if (response.data.client?.primary_color) {
+          document.documentElement.style.setProperty('--primary-color', response.data.client.primary_color);
         }
       } catch (error) {
         console.error('Failed to fetch website data:', error);
+        setError('Website not found');
       } finally {
         setLoading(false);
       }
@@ -60,7 +59,7 @@ export const PublicWebsite = () => {
     );
   }
 
-  if (!client) {
+  if (error || !siteData || !siteData.client) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -71,19 +70,81 @@ export const PublicWebsite = () => {
     );
   }
 
+  const { client, site_content, services, gallery, products, product_categories, offers, packages, addons } = siteData;
+  const enabledModules = client.enabled_modules || ['about', 'services', 'gallery', 'booking', 'offers', 'contact'];
+
+  // Create content object for backward compatibility
+  const content = site_content || {
+    banner: site_content?.hero || {},
+    featured: site_content?.services_section || {},
+    about: site_content?.about || {}
+  };
+
+  // Map hero to banner for backward compatibility
+  if (site_content?.hero) {
+    content.banner = site_content.hero;
+  }
+
   return (
     <div className="min-h-screen bg-background" data-testid="public-website">
-      <PublicHeader client={client} enabledLanguages={client.enabled_languages} />
+      <PublicHeader 
+        client={client} 
+        enabledLanguages={client.enabled_languages} 
+        enabledModules={enabledModules}
+      />
       
       <Routes>
-        <Route path="/" element={<PublicHome content={content} offers={offers} services={services} clientId={clientId} />} />
-        <Route path="/about" element={<PublicAbout content={content} />} />
-        <Route path="/services" element={<PublicServices services={services} offers={offers} />} />
-        <Route path="/pricing" element={<PublicPricing clientId={clientId} />} />
-        <Route path="/booking" element={<PublicBooking clientId={clientId} />} />
+        <Route 
+          path="/" 
+          element={
+            <PublicHome 
+              content={content} 
+              siteContent={site_content}
+              offers={enabledModules.includes('offers') ? offers : []} 
+              services={enabledModules.includes('services') ? services : []} 
+              clientId={clientId} 
+            />
+          } 
+        />
+        
+        {enabledModules.includes('about') && (
+          <Route path="/about" element={<PublicAbout content={content} siteContent={site_content} />} />
+        )}
+        
+        {enabledModules.includes('services') && (
+          <Route path="/services" element={<PublicServices services={services} offers={offers} siteContent={site_content} />} />
+        )}
+        
+        {enabledModules.includes('gallery') && (
+          <Route path="/gallery" element={<PublicGallery gallery={gallery} siteContent={site_content} />} />
+        )}
+        
+        {enabledModules.includes('products') && (
+          <Route 
+            path="/products" 
+            element={
+              <PublicProducts 
+                products={products} 
+                categories={product_categories} 
+                clientId={clientId}
+                client={client}
+              />
+            } 
+          />
+        )}
+        
+        {enabledModules.includes('booking') && (
+          <>
+            <Route path="/pricing" element={<PublicPricing clientId={clientId} packages={packages} addons={addons} />} />
+            <Route path="/booking" element={<PublicBooking clientId={clientId} packages={packages} addons={addons} />} />
+          </>
+        )}
+        
+        {/* Redirect disabled modules to home */}
+        <Route path="*" element={<Navigate to={`/site/${clientId}`} replace />} />
       </Routes>
       
-      <PublicFooter client={client} content={content} />
+      <PublicFooter client={client} content={content} siteContent={site_content} />
     </div>
   );
 };
