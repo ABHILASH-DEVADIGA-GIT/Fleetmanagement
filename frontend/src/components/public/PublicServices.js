@@ -55,9 +55,9 @@ export const PublicServices = ({ services, offers, siteContent, client, clientId
       </section>
 
       {/* Stats Section */}
-      <section className="py-10 px-6 bg-white border-b">
+      <section className="py-6 px-6 bg-white border-b">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             {[
               { value: '500+', label: { en: 'Projects Done', kn: 'ಮುಗಿದ ಯೋಜನೆಗಳು', hi: 'पूर्ण प्रोजेक्ट' } },
               { value: '300+', label: { en: 'Happy Clients', kn: 'ಸಂತೋಷ ಗ್ರಾಹಕರು', hi: 'खुश ग्राहक' } },
@@ -70,8 +70,8 @@ export const PublicServices = ({ services, offers, siteContent, client, clientId
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
               >
-                <p className="text-4xl sm:text-5xl font-bold" style={{ color: primaryColor }}>{stat.value}</p>
-                <p className="text-muted-foreground text-sm mt-1">{t(stat.label)}</p>
+                <p className="text-3xl sm:text-4xl font-bold" style={{ color: primaryColor }}>{stat.value}</p>
+                <p className="text-muted-foreground text-xs mt-1">{t(stat.label)}</p>
               </motion.div>
             ))}
           </div>
@@ -251,16 +251,16 @@ export const PublicServices = ({ services, offers, siteContent, client, clientId
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-6" style={{ backgroundColor: primaryColor }}>
+      <section className="py-10 px-6" style={{ backgroundColor: primaryColor }}>
         <div className="max-w-4xl mx-auto text-center text-white">
-          <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4">
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold mb-2">
             {t({ en: "Can't find what you're looking for?", kn: 'ನೀವು ಹುಡುಕುತ್ತಿರುವುದು ಸಿಗುತ್ತಿಲ್ಲವೇ?', hi: 'जो आप खोज रहे हैं वह नहीं मिल रहा?' })}
           </h2>
-          <p className="text-lg opacity-90 mb-8">
+          <p className="text-base opacity-90 mb-5">
             {t({ en: 'Contact us for custom packages tailored to your specific needs', kn: 'ನಿಮ್ಮ ನಿರ್ದಿಷ್ಟ ಅವಶ್ಯಕತೆಗಳಿಗೆ ಕಸ್ಟಮ್ ಪ್ಯಾಕೇಜ್‌ಗಳಿಗಾಗಿ ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ', hi: 'अपनी विशिष्ट आवश्यकताओं के लिए कस्टम पैकेज के लिए संपर्क करें' })}
           </p>
           <Link to={`/site/${clientId}/contact`}>
-            <Button size="lg" className="font-ui uppercase tracking-wider bg-white hover:bg-white/90" style={{ color: primaryColor }}>
+            <Button size="default" className="font-ui uppercase tracking-wider bg-white hover:bg-white/90" style={{ color: primaryColor }}>
               {t({ en: 'Contact Us', kn: 'ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ', hi: 'संपर्क करें' })}
             </Button>
           </Link>

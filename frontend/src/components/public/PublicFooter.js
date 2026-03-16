@@ -12,8 +12,8 @@ export const PublicFooter = ({ client, content, siteContent }) => {
 
   return (
     <footer className="bg-card border-t border-border" data-testid="public-footer">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -119,7 +119,7 @@ export const PublicFooter = ({ client, content, siteContent }) => {
         </div>
 
         {/* Copyright */}
-        <div className="mt-10 pt-6 border-t border-border text-center text-sm text-muted-foreground">
+        <div className="mt-6 pt-4 border-t border-border text-center text-sm text-muted-foreground">
           <p>
             {t(footerContent?.copyright_text) || `© ${new Date().getFullYear()} ${client?.business_name}. ${t({ en: 'All rights reserved.', kn: 'ಎಲ್ಲಾ ಹಕ್ಕುಗಳು ರಕ್ಷಿತ.', hi: 'सर्वाधिकार सुरक्षित।' })}`}
           </p>

@@ -732,6 +732,29 @@ async def create_client(client_data: ClientCreate, _: dict = Depends(verify_supe
     )
     await db.page_content.insert_one(default_content.model_dump())
     
+    # Create welcome notifications for the new admin
+    await create_notification(
+        client_id=client.client_id,
+        title="Welcome to FrameBook Pro!",
+        message=f"Your business '{client_data.business_name}' is now set up. Start by customizing your website.",
+        notification_type="success",
+        link="/admin/site-content"
+    )
+    await create_notification(
+        client_id=client.client_id,
+        title="Add Your Services",
+        message="Add your services to showcase them on your public website.",
+        notification_type="info",
+        link="/admin/services"
+    )
+    await create_notification(
+        client_id=client.client_id,
+        title="Upload Gallery Images",
+        message="Upload photos to your gallery to attract more customers.",
+        notification_type="info",
+        link="/admin/gallery"
+    )
+    
     return client
 
 @api_router.get("/super-admin/clients", response_model=List[Client])
@@ -2071,6 +2094,148 @@ async def get_site_by_domain(domain: str):
         raise HTTPException(status_code=404, detail="Site not found")
     
     return await get_public_site_data(client['client_id'])
+
+# ============= Notification System =============
+
+class NotificationType:
+    INFO = 'info'
+    SUCCESS = 'success'
+    WARNING = 'warning'
+    BOOKING = 'booking'
+    LEAD = 'lead'
+    PAYMENT = 'payment'
+    SYSTEM = 'system'
+
+class NotificationCreate(BaseModel):
+    title: str
+    message: str
+    notification_type: str = 'info'
+    link: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+class Notification(BaseModel):
+    notification_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    client_id: str
+    user_id: Optional[str] = None
+    title: str
+    message: str
+    notification_type: str = 'info'
+    link: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+    is_read: bool = False
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+# Get notifications for current user
+@api_router.get("/admin/notifications")
+async def get_notifications(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    limit: int = 20,
+    unread_only: bool = False
+):
+    user = await verify_token(credentials)
+    
+    query = {"client_id": user.get('client_id')}
+    if unread_only:
+        query["is_read"] = False
+    
+    notifications = await db.notifications.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    unread_count = await db.notifications.count_documents({"client_id": user.get('client_id'), "is_read": False})
+    
+    return {"notifications": notifications, "unread_count": unread_count}
+
+# Mark notification as read
+@api_router.put("/admin/notifications/{notification_id}/read")
+async def mark_notification_read(
+    notification_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    user = await verify_token(credentials)
+    
+    result = await db.notifications.update_one(
+        {"notification_id": notification_id, "client_id": user.get('client_id')},
+        {"$set": {"is_read": True}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    return {"message": "Notification marked as read"}
+
+# Mark all notifications as read
+@api_router.put("/admin/notifications/mark-all-read")
+async def mark_all_notifications_read(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    user = await verify_token(credentials)
+    
+    await db.notifications.update_many(
+        {"client_id": user.get('client_id'), "is_read": False},
+        {"$set": {"is_read": True}}
+    )
+    
+    return {"message": "All notifications marked as read"}
+
+# Delete a notification
+@api_router.delete("/admin/notifications/{notification_id}")
+async def delete_notification(
+    notification_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    user = await verify_token(credentials)
+    
+    result = await db.notifications.delete_one(
+        {"notification_id": notification_id, "client_id": user.get('client_id')}
+    )
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    return {"message": "Notification deleted"}
+
+# Helper function to create notification (called internally)
+async def create_notification(
+    client_id: str,
+    title: str,
+    message: str,
+    notification_type: str = 'info',
+    link: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None
+):
+    notification = {
+        "notification_id": str(uuid.uuid4()),
+        "client_id": client_id,
+        "title": title,
+        "message": message,
+        "notification_type": notification_type,
+        "link": link,
+        "metadata": metadata,
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification)
+    return notification
+
+# Create notification (API endpoint for testing/manual creation)
+@api_router.post("/admin/notifications")
+async def create_notification_api(
+    notification_data: NotificationCreate,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    user = await verify_token(credentials)
+    
+    notification = await create_notification(
+        client_id=user.get('client_id'),
+        title=notification_data.title,
+        message=notification_data.message,
+        notification_type=notification_data.notification_type,
+        link=notification_data.link,
+        metadata=notification_data.metadata
+    )
+    
+    # Remove _id before returning
+    notification.pop('_id', None)
+    return notification
+
 app.include_router(api_router)
 
 app.add_middleware(

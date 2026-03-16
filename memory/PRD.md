@@ -165,6 +165,24 @@ FrameBook Pro is a comprehensive SaaS platform for service businesses (photograp
 - Fixed navigation bug (links now navigate directly without /about redirect)
 - All pages use dynamic `primaryColor` from client settings for consistency
 
+### UI/UX Improvements (March 2026 - Latest)
+- **Reduced ribbon/stats bar sizes** - More compact stats sections across all public pages
+- **Reduced footer padding** - Cleaner, less spacious footer
+- **Smaller CTA sections** - More compact call-to-action areas
+
+### In-App Notification System (March 2026 - Latest)
+- **WhatsApp/Social Media style notifications** in Admin Dashboard
+- Features:
+  - Bell icon with unread count badge (animated pulse)
+  - Categorized notifications with colored icons (booking=blue, lead=purple, payment=green, warning=amber, success=emerald)
+  - Time-ago format display (Just now, 5m ago, 1h ago, etc.)
+  - Mark as read / Mark all as read functionality
+  - Delete notifications
+  - Auto-polling every 30 seconds for new notifications
+  - Browser notification support (with permission)
+- Backend APIs: GET/POST/PUT/DELETE notifications
+- Auto-creates welcome notifications for new clients
+
 ## Testing URLs
 - **Login**: https://offer-dashboard-1.preview.emergentagent.com/login
 - **Public Site**: https://offer-dashboard-1.preview.emergentagent.com/site/f0afd9ff-fb85-45e6-9f9e-8027f5fcfbca

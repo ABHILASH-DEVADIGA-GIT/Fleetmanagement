@@ -75,9 +75,9 @@ export const PublicAbout = ({ content, siteContent, client }) => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 px-6 bg-white border-b">
+      <section className="py-6 px-6 bg-white border-b">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             {[
               { value: '10+', label: { en: 'Years Experience', kn: 'ವರ್ಷಗಳ ಅನುಭವ', hi: 'साल का अनुभव' } },
               { value: '500+', label: { en: 'Happy Clients', kn: 'ಸಂತೋಷ ಗ್ರಾಹಕರು', hi: 'खुश ग्राहक' } },
@@ -90,8 +90,8 @@ export const PublicAbout = ({ content, siteContent, client }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
               >
-                <p className="text-4xl sm:text-5xl font-bold" style={{ color: primaryColor }}>{stat.value}</p>
-                <p className="text-muted-foreground text-sm mt-1">{t(stat.label)}</p>
+                <p className="text-3xl sm:text-4xl font-bold" style={{ color: primaryColor }}>{stat.value}</p>
+                <p className="text-muted-foreground text-xs mt-1">{t(stat.label)}</p>
               </motion.div>
             ))}
           </div>
@@ -225,17 +225,17 @@ export const PublicAbout = ({ content, siteContent, client }) => {
 
       {/* CTA Section */}
       <section 
-        className="py-16 px-6"
+        className="py-10 px-6"
         style={{ backgroundColor: primaryColor }}
       >
         <div className="max-w-4xl mx-auto text-center text-white">
-          <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4">
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold mb-2">
             {t({ en: 'Ready to Work Together?', kn: 'ಒಟ್ಟಿಗೆ ಕೆಲಸ ಮಾಡಲು ಸಿದ್ಧರಿದ್ದೀರಾ?', hi: 'साथ काम करने के लिए तैयार हैं?' })}
           </h2>
-          <p className="text-lg opacity-90 mb-8">
+          <p className="text-base opacity-90 mb-5">
             {t({ en: "Let's create something beautiful together", kn: 'ಒಟ್ಟಿಗೆ ಏನಾದರೂ ಸುಂದರವಾದದ್ದನ್ನು ರಚಿಸೋಣ', hi: 'आइए साथ मिलकर कुछ खूबसूरत बनाएं' })}
           </p>
-          <button className="bg-white font-ui uppercase tracking-wider px-8 py-3 rounded-md font-semibold hover:bg-white/90 transition-colors" style={{ color: primaryColor }}>
+          <button className="bg-white font-ui uppercase tracking-wider px-6 py-2 rounded-md font-semibold hover:bg-white/90 transition-colors" style={{ color: primaryColor }}>
             {t({ en: 'Get In Touch', kn: 'ಸಂಪರ್ಕದಲ್ಲಿರಿ', hi: 'संपर्क में रहें' })}
           </button>
         </div>

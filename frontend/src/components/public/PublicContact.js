@@ -53,9 +53,9 @@ export const PublicContact = ({ client, siteContent, clientId }) => {
       </section>
 
       {/* Quick Contact Stats */}
-      <section className="py-8 px-6 bg-white border-b">
+      <section className="py-5 px-6 bg-white border-b">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-3 gap-6 text-center">
+          <div className="grid grid-cols-3 gap-4 text-center">
             {[
               { value: '24/7', label: { en: 'Support', kn: 'ಬೆಂಬಲ', hi: 'सहायता' } },
               { value: '<1hr', label: { en: 'Response Time', kn: 'ಪ್ರತಿಕ್ರಿಯೆ ಸಮಯ', hi: 'प्रतिक्रिया समय' } },
@@ -67,8 +67,8 @@ export const PublicContact = ({ client, siteContent, clientId }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
               >
-                <p className="text-3xl sm:text-4xl font-bold" style={{ color: primaryColor }}>{stat.value}</p>
-                <p className="text-muted-foreground text-sm mt-1">{t(stat.label)}</p>
+                <p className="text-2xl sm:text-3xl font-bold" style={{ color: primaryColor }}>{stat.value}</p>
+                <p className="text-muted-foreground text-xs mt-1">{t(stat.label)}</p>
               </motion.div>
             ))}
           </div>
@@ -313,16 +313,16 @@ export const PublicContact = ({ client, siteContent, clientId }) => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6" style={{ backgroundColor: primaryColor }}>
+      <section className="py-12 px-6" style={{ backgroundColor: primaryColor }}>
         <div className="max-w-4xl mx-auto text-center text-white">
-          <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4">
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold mb-2">
             {t({ en: 'Ready to Book Your Session?', kn: 'ನಿಮ್ಮ ಸೆಷನ್ ಬುಕ್ ಮಾಡಲು ಸಿದ್ಧರಿದ್ದೀರಾ?', hi: 'अपना सेशन बुक करने के लिए तैयार हैं?' })}
           </h2>
-          <p className="text-lg opacity-90 mb-10">
+          <p className="text-base opacity-90 mb-6">
             {t({ en: "Let's create beautiful memories together", kn: 'ಒಟ್ಟಿಗೆ ಸುಂದರ ನೆನಪುಗಳನ್ನು ರಚಿಸೋಣ', hi: 'आइए साथ मिलकर खूबसूरत यादें बनाएं' })}
           </p>
           <Link to={`/site/${clientId}/booking`}>
-            <Button size="lg" className="font-ui uppercase tracking-wider px-10 bg-white hover:bg-white/90" style={{ color: primaryColor }}>
+            <Button size="default" className="font-ui uppercase tracking-wider px-6 bg-white hover:bg-white/90" style={{ color: primaryColor }}>
               {t({ en: 'Book Appointment', kn: 'ಅಪಾಯಿಂಟ್ಮೆಂಟ್ ಬುಕ್ ಮಾಡಿ', hi: 'अपॉइंटमेंट बुक करें' })}
             </Button>
           </Link>

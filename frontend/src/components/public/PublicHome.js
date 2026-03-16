@@ -78,9 +78,9 @@ export const PublicHome = ({ content, siteContent, offers, services, clientId, c
       </section>
 
       {/* Stats Bar */}
-      <section className="py-10 text-white" style={{ backgroundColor: primaryColor }}>
+      <section className="py-6 text-white" style={{ backgroundColor: primaryColor }}>
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             {[
               { icon: Camera, value: '500+', label: { en: 'Projects', kn: 'ಯೋಜನೆಗಳು', hi: 'प्रोजेक्ट्स' } },
               { icon: Users, value: '300+', label: { en: 'Happy Clients', kn: 'ಸಂತೋಷ ಗ್ರಾಹಕರು', hi: 'खुश ग्राहक' } },
@@ -94,9 +94,9 @@ export const PublicHome = ({ content, siteContent, offers, services, clientId, c
                 transition={{ delay: idx * 0.1 }}
                 className="flex flex-col items-center"
               >
-                <stat.icon className="h-7 w-7 mb-3 opacity-90" />
-                <p className="text-3xl sm:text-4xl font-bold">{stat.value}</p>
-                <p className="text-sm opacity-85 mt-1">{t(stat.label)}</p>
+                <stat.icon className="h-5 w-5 mb-1 opacity-90" />
+                <p className="text-2xl sm:text-3xl font-bold">{stat.value}</p>
+                <p className="text-xs opacity-85">{t(stat.label)}</p>
               </motion.div>
             ))}
           </div>
@@ -314,22 +314,22 @@ export const PublicHome = ({ content, siteContent, offers, services, clientId, c
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6 text-white" style={{ backgroundColor: primaryColor }}>
+      <section className="py-12 px-6 text-white" style={{ backgroundColor: primaryColor }}>
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4">
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold mb-3">
             {t({ en: 'Ready to Get Started?', kn: 'ಪ್ರಾರಂಭಿಸಲು ಸಿದ್ಧರಿದ್ದೀರಾ?', hi: 'शुरू करने के लिए तैयार हैं?' })}
           </h2>
-          <p className="text-lg opacity-90 mb-10">
+          <p className="text-base opacity-90 mb-6">
             {t({ en: 'Book your session today and let us capture your special moments', kn: 'ಇಂದೇ ನಿಮ್ಮ ಸೆಷನ್ ಬುಕ್ ಮಾಡಿ ಮತ್ತು ನಿಮ್ಮ ವಿಶೇಷ ಕ್ಷಣಗಳನ್ನು ಸೆರೆಹಿಡಿಯಲು ನಮಗೆ ಅನುಮತಿಸಿ', hi: 'आज ही अपना सेशन बुक करें और हमें अपने खास पलों को कैद करने दें' })}
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-3">
             <Link to={`/site/${clientId}/booking`}>
-              <Button size="lg" className="font-ui uppercase tracking-wider px-10 bg-white hover:bg-white/90" style={{ color: primaryColor }}>
+              <Button size="default" className="font-ui uppercase tracking-wider px-6 bg-white hover:bg-white/90" style={{ color: primaryColor }}>
                 {t({ en: 'Book Appointment', kn: 'ಅಪಾಯಿಂಟ್ಮೆಂಟ್ ಬುಕ್ ಮಾಡಿ', hi: 'अपॉइंटमेंट बुक करें' })}
               </Button>
             </Link>
             <Link to={`/site/${clientId}/contact`}>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 font-ui uppercase tracking-wider px-10">
+              <Button size="default" variant="outline" className="border-white text-white hover:bg-white/10 font-ui uppercase tracking-wider px-6">
                 {t({ en: 'Contact Us', kn: 'ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ', hi: 'संपर्क करें' })}
               </Button>
             </Link>

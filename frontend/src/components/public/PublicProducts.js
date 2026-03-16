@@ -100,9 +100,9 @@ export const PublicProducts = ({ products: initialProducts, categories: initialC
       </section>
 
       {/* Stats */}
-      <section className="py-8 px-6 bg-white border-b">
+      <section className="py-5 px-6 bg-white border-b">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-3 gap-6 text-center">
+          <div className="grid grid-cols-3 gap-4 text-center">
             {[
               { value: products.length || '50+', label: { en: 'Products', kn: 'ಉತ್ಪನ್ನಗಳು', hi: 'उत्पाद' } },
               { value: categories.length || '5+', label: { en: 'Categories', kn: 'ವರ್ಗಗಳು', hi: 'श्रेणियां' } },
@@ -114,8 +114,8 @@ export const PublicProducts = ({ products: initialProducts, categories: initialC
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
               >
-                <p className="text-3xl sm:text-4xl font-bold" style={{ color: primaryColor }}>{stat.value}</p>
-                <p className="text-muted-foreground text-sm mt-1">{t(stat.label)}</p>
+                <p className="text-2xl sm:text-3xl font-bold" style={{ color: primaryColor }}>{stat.value}</p>
+                <p className="text-muted-foreground text-xs mt-1">{t(stat.label)}</p>
               </motion.div>
             ))}
           </div>
@@ -263,16 +263,16 @@ export const PublicProducts = ({ products: initialProducts, categories: initialC
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-6" style={{ backgroundColor: primaryColor }}>
+      <section className="py-10 px-6" style={{ backgroundColor: primaryColor }}>
         <div className="max-w-4xl mx-auto text-center text-white">
-          <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4">
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold mb-2">
             {t({ en: 'Interested in Our Products?', kn: 'ನಮ್ಮ ಉತ್ಪನ್ನಗಳಲ್ಲಿ ಆಸಕ್ತಿ ಇದೆಯೇ?', hi: 'हमारे उत्पादों में रुचि है?' })}
           </h2>
-          <p className="text-lg opacity-90 mb-8">
+          <p className="text-base opacity-90 mb-5">
             {t({ en: 'Contact us for inquiries and orders', kn: 'ವಿಚಾರಣೆ ಮತ್ತು ಆದೇಶಗಳಿಗಾಗಿ ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ', hi: 'पूछताछ और ऑर्डर के लिए संपर्क करें' })}
           </p>
           <Link to={`/site/${clientId}/contact`}>
-            <Button size="lg" className="font-ui uppercase tracking-wider bg-white hover:bg-white/90" style={{ color: primaryColor }}>
+            <Button size="default" className="font-ui uppercase tracking-wider bg-white hover:bg-white/90" style={{ color: primaryColor }}>
               {t({ en: 'Contact Us', kn: 'ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ', hi: 'संपर्क करें' })}
             </Button>
           </Link>

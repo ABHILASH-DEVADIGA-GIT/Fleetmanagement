@@ -97,9 +97,9 @@ export const PublicGallery = ({ gallery, siteContent, client, clientId }) => {
       </section>
 
       {/* Stats */}
-      <section className="py-8 px-6 bg-white border-b">
+      <section className="py-5 px-6 bg-white border-b">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-3 gap-6 text-center">
+          <div className="grid grid-cols-3 gap-4 text-center">
             {[
               { value: gallery.length, label: { en: 'Photos', kn: 'ಫೋಟೋಗಳು', hi: 'तस्वीरें' } },
               { value: categories.length - 1 || 1, label: { en: 'Categories', kn: 'ವರ್ಗಗಳು', hi: 'श्रेणियां' } },
@@ -111,8 +111,8 @@ export const PublicGallery = ({ gallery, siteContent, client, clientId }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
               >
-                <p className="text-3xl sm:text-4xl font-bold" style={{ color: primaryColor }}>{stat.value}</p>
-                <p className="text-muted-foreground text-sm mt-1">{t(stat.label)}</p>
+                <p className="text-2xl sm:text-3xl font-bold" style={{ color: primaryColor }}>{stat.value}</p>
+                <p className="text-muted-foreground text-xs mt-1">{t(stat.label)}</p>
               </motion.div>
             ))}
           </div>
@@ -177,16 +177,16 @@ export const PublicGallery = ({ gallery, siteContent, client, clientId }) => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-6" style={{ backgroundColor: primaryColor }}>
+      <section className="py-10 px-6" style={{ backgroundColor: primaryColor }}>
         <div className="max-w-4xl mx-auto text-center text-white">
-          <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4">
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold mb-2">
             {t({ en: 'Want to Be Part of Our Gallery?', kn: 'ನಮ್ಮ ಗ್ಯಾಲರಿಯ ಭಾಗವಾಗಲು ಬಯಸುವಿರಾ?', hi: 'हमारी गैलरी का हिस्सा बनना चाहते हैं?' })}
           </h2>
-          <p className="text-lg opacity-90 mb-8">
+          <p className="text-base opacity-90 mb-5">
             {t({ en: "Book your session and let's create beautiful memories together", kn: 'ನಿಮ್ಮ ಸೆಷನ್ ಬುಕ್ ಮಾಡಿ ಮತ್ತು ಒಟ್ಟಿಗೆ ಸುಂದರ ನೆನಪುಗಳನ್ನು ರಚಿಸೋಣ', hi: 'अपना सेशन बुक करें और साथ मिलकर सुंदर यादें बनाएं' })}
           </p>
           <Link to={`/site/${clientId}/booking`}>
-            <Button size="lg" className="font-ui uppercase tracking-wider bg-white hover:bg-white/90" style={{ color: primaryColor }}>
+            <Button size="default" className="font-ui uppercase tracking-wider bg-white hover:bg-white/90" style={{ color: primaryColor }}>
               {t({ en: 'Book Now', kn: 'ಈಗ ಬುಕ್ ಮಾಡಿ', hi: 'अभी बुक करें' })}
             </Button>
           </Link>
