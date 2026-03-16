@@ -12,6 +12,7 @@ import { PublicHeader } from '../components/public/PublicHeader';
 import { PublicFooter } from '../components/public/PublicFooter';
 import { PublicGallery } from '../components/public/PublicGallery';
 import { PublicProducts } from '../components/public/PublicProducts';
+import { PublicContact } from '../components/public/PublicContact';
 import { Loader2 } from 'lucide-react';
 
 export const PublicWebsite = () => {
@@ -108,7 +109,7 @@ export const PublicWebsite = () => {
         />
         
         {enabledModules.includes('about') && (
-          <Route path="/about" element={<PublicAbout content={content} siteContent={site_content} />} />
+          <Route path="/about" element={<PublicAbout content={content} siteContent={site_content} client={client} />} />
         )}
         
         {enabledModules.includes('services') && (
@@ -131,6 +132,10 @@ export const PublicWebsite = () => {
               />
             } 
           />
+        )}
+        
+        {enabledModules.includes('contact') && (
+          <Route path="/contact" element={<PublicContact client={client} siteContent={site_content} />} />
         )}
         
         {enabledModules.includes('booking') && (
