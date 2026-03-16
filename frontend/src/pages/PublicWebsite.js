@@ -103,21 +103,22 @@ export const PublicWebsite = () => {
               siteContent={site_content}
               offers={enabledModules.includes('offers') ? offers : []} 
               services={enabledModules.includes('services') ? services : []} 
-              clientId={clientId} 
+              clientId={clientId}
+              client={client}
             />
           } 
         />
         
         {enabledModules.includes('about') && (
-          <Route path="/about" element={<PublicAbout content={content} siteContent={site_content} client={client} />} />
+          <Route path="/about" element={<PublicAbout content={content} siteContent={site_content} client={client} clientId={clientId} />} />
         )}
         
         {enabledModules.includes('services') && (
-          <Route path="/services" element={<PublicServices services={services} offers={offers} siteContent={site_content} />} />
+          <Route path="/services" element={<PublicServices services={services} offers={offers} siteContent={site_content} client={client} clientId={clientId} />} />
         )}
         
         {enabledModules.includes('gallery') && (
-          <Route path="/gallery" element={<PublicGallery gallery={gallery} siteContent={site_content} />} />
+          <Route path="/gallery" element={<PublicGallery gallery={gallery} siteContent={site_content} client={client} clientId={clientId} />} />
         )}
         
         {enabledModules.includes('products') && (
@@ -135,7 +136,7 @@ export const PublicWebsite = () => {
         )}
         
         {enabledModules.includes('contact') && (
-          <Route path="/contact" element={<PublicContact client={client} siteContent={site_content} />} />
+          <Route path="/contact" element={<PublicContact client={client} siteContent={site_content} clientId={clientId} />} />
         )}
         
         {enabledModules.includes('booking') && (

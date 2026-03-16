@@ -154,6 +154,17 @@ FrameBook Pro is a comprehensive SaaS platform for service businesses (photograp
 - Added demo services and gallery images
 - Improved Services, About, Gallery pages with modern design
 
+### UI Redesign (March 2026)
+- **Applied consistent blue-and-white theme** across ALL public pages
+- Each page now features:
+  - Hero section with client's primary color and decorative circular background patterns
+  - Stats bar with key metrics in primary color
+  - Content sections with consistent card styling and hover effects
+  - CTA section at bottom with primary color background
+- Pages updated: Home, About, Services, Gallery, Products, Contact
+- Fixed navigation bug (links now navigate directly without /about redirect)
+- All pages use dynamic `primaryColor` from client settings for consistency
+
 ## Testing URLs
 - **Login**: https://offer-dashboard-1.preview.emergentagent.com/login
 - **Public Site**: https://offer-dashboard-1.preview.emergentagent.com/site/f0afd9ff-fb85-45e6-9f9e-8027f5fcfbca
