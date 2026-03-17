@@ -114,6 +114,8 @@ class ClientCreate(BaseModel):
     primary_color: str = '#1e40af'
     logo_url: Optional[str] = None
     admin_password: Optional[str] = None  # For auto-creating admin account
+    max_gallery_images: int = 50  # Default limit
+    max_products: int = 100  # Default limit
 
 class Client(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -128,6 +130,8 @@ class Client(BaseModel):
     enabled_modules: List[str] = Field(default_factory=lambda: DEFAULT_MODULES.copy())
     primary_color: str = '#1e40af'
     logo_url: Optional[str] = None
+    max_gallery_images: int = 50
+    max_products: int = 100
     status: str = 'active'
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
@@ -1852,6 +1856,17 @@ async def get_event_profit_report(payload: dict = Depends(verify_admin)):
 async def create_product(product_data: ProductCreate, payload: dict = Depends(verify_admin)):
     client_id = payload.get('client_id')
     
+    # Check product limit
+    client = await db.clients.find_one({"client_id": client_id}, {"_id": 0})
+    max_products = client.get('max_products', 100) if client else 100
+    current_count = await db.products.count_documents({"client_id": client_id})
+    
+    if current_count >= max_products:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Product limit reached ({max_products}). Upgrade your plan to add more products."
+        )
+    
     # Calculate final price
     final_price = product_data.base_price * (1 - product_data.discount_percentage / 100)
     
@@ -1863,14 +1878,23 @@ async def create_product(product_data: ProductCreate, payload: dict = Depends(ve
     await db.products.insert_one(product.model_dump())
     return product
 
-@api_router.get("/admin/products", response_model=List[Product])
+@api_router.get("/admin/products")
 async def get_products(payload: dict = Depends(verify_admin), category: Optional[str] = None):
     client_id = payload.get('client_id')
     query = {"client_id": client_id}
     if category:
         query["category"] = category
     products = await db.products.find(query, {"_id": 0}).sort("display_order", 1).to_list(1000)
-    return products
+    
+    # Also return limit info
+    client = await db.clients.find_one({"client_id": client_id}, {"_id": 0})
+    max_products = client.get('max_products', 100) if client else 100
+    
+    return {
+        "products": products,
+        "count": len(products),
+        "limit": max_products
+    }
 
 @api_router.get("/admin/products/{product_id}", response_model=Product)
 async def get_product(product_id: str, payload: dict = Depends(verify_admin)):
@@ -1976,6 +2000,18 @@ async def update_site_section(section: str, updates: dict, payload: dict = Depen
 @api_router.post("/admin/gallery")
 async def add_gallery_image(image_data: dict, payload: dict = Depends(verify_admin)):
     client_id = payload.get('client_id')
+    
+    # Check gallery image limit
+    client = await db.clients.find_one({"client_id": client_id}, {"_id": 0})
+    max_gallery_images = client.get('max_gallery_images', 50) if client else 50
+    current_count = await db.gallery.count_documents({"client_id": client_id})
+    
+    if current_count >= max_gallery_images:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Gallery image limit reached ({max_gallery_images}). Please remove existing images to upload new ones."
+        )
+    
     image = GalleryImage(client_id=client_id, **image_data)
     await db.gallery.insert_one(image.model_dump())
     return image
@@ -1984,7 +2020,16 @@ async def add_gallery_image(image_data: dict, payload: dict = Depends(verify_adm
 async def get_gallery(payload: dict = Depends(verify_admin)):
     client_id = payload.get('client_id')
     images = await db.gallery.find({"client_id": client_id}, {"_id": 0}).sort("display_order", 1).to_list(1000)
-    return images
+    
+    # Also return limit info
+    client = await db.clients.find_one({"client_id": client_id}, {"_id": 0})
+    max_gallery_images = client.get('max_gallery_images', 50) if client else 50
+    
+    return {
+        "images": images,
+        "count": len(images),
+        "limit": max_gallery_images
+    }
 
 @api_router.put("/admin/gallery/{image_id}")
 async def update_gallery_image(image_id: str, updates: dict, payload: dict = Depends(verify_admin)):

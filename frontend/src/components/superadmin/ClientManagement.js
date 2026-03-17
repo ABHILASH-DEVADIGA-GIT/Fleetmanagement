@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
 import { toast } from 'sonner';
+import { ImageUpload } from '../shared/ImageUpload';
 
 const AVAILABLE_MODULES = [
   { id: 'about', label: 'About Section', description: 'Company/Business information' },
@@ -38,7 +39,9 @@ export const ClientManagement = () => {
     enabled_modules: DEFAULT_MODULES,
     primary_color: '#1e40af',
     logo_url: '',
-    admin_password: ''
+    admin_password: '',
+    max_gallery_images: 50,
+    max_products: 100
   });
 
   useEffect(() => {
@@ -97,7 +100,9 @@ export const ClientManagement = () => {
       enabled_modules: client.enabled_modules || DEFAULT_MODULES,
       primary_color: client.primary_color || '#1e40af',
       logo_url: client.logo_url || '',
-      admin_password: ''
+      admin_password: '',
+      max_gallery_images: client.max_gallery_images || 50,
+      max_products: client.max_products || 100
     });
     setOpen(true);
   };
@@ -133,7 +138,9 @@ export const ClientManagement = () => {
       enabled_modules: DEFAULT_MODULES,
       primary_color: '#1e40af',
       logo_url: '',
-      admin_password: ''
+      admin_password: '',
+      max_gallery_images: 50,
+      max_products: 100
     });
   };
 
@@ -271,11 +278,12 @@ export const ClientManagement = () => {
                   </div>
                 </div>
                 <div>
-                  <Label>Logo URL</Label>
-                  <Input
+                  <ImageUpload
+                    label="Business Logo"
                     value={formData.logo_url}
-                    onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                    placeholder="https://..."
+                    onChange={(url) => setFormData({ ...formData, logo_url: url })}
+                    category="logos"
+                    previewSize="sm"
                   />
                 </div>
               </div>

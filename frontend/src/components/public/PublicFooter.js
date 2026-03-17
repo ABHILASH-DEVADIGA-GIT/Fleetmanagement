@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export const PublicFooter = ({ client, content, siteContent }) => {
   const { t } = useLanguage();
@@ -18,7 +19,7 @@ export const PublicFooter = ({ client, content, siteContent }) => {
           <div>
             <div className="flex items-center gap-2 mb-4">
               {client?.logo_url && (
-                <img src={client.logo_url} alt={client.business_name} className="h-8 w-auto" />
+                <img src={getImageUrl(client.logo_url)} alt={client.business_name} className="h-8 w-auto" />
               )}
               <h3 className="font-heading text-xl font-bold">{client?.business_name}</h3>
             </div>

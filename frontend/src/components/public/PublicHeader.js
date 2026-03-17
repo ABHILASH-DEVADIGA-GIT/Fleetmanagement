@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export const PublicHeader = ({ client, enabledLanguages, enabledModules = [] }) => {
   const { language, changeLanguage } = useLanguage();
@@ -44,7 +45,7 @@ export const PublicHeader = ({ client, enabledLanguages, enabledModules = [] }) 
         {/* Logo */}
         <Link to={basePath} className="flex items-center gap-3">
           {client?.logo_url && (
-            <img src={client.logo_url} alt={client.business_name} className="h-10 w-auto" />
+            <img src={getImageUrl(client.logo_url)} alt={client.business_name} className="h-10 w-auto" />
           )}
           <span className="font-heading text-xl md:text-2xl font-bold text-foreground hover:text-primary transition-colors">
             {client?.business_name}
