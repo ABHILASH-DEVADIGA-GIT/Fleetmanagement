@@ -43,8 +43,9 @@ security = HTTPBearer()
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
-# Mount uploads directory for serving static files
-app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+# Mount uploads directory for serving static files under /api path
+# This ensures proper routing through Kubernetes ingress
+app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 logger = logging.getLogger(__name__)
 
@@ -2297,8 +2298,8 @@ async def upload_file(
     with open(file_path, "wb") as f:
         f.write(contents)
     
-    # Return the URL path
-    url_path = f"/uploads/{category}/{unique_filename}"
+    # Return the URL path (with /api prefix for proper routing)
+    url_path = f"/api/uploads/{category}/{unique_filename}"
     
     return {
         "success": True,
@@ -2349,7 +2350,7 @@ async def upload_multiple_files(
             with open(file_path, "wb") as f:
                 f.write(contents)
             
-            url_path = f"/uploads/{category}/{unique_filename}"
+            url_path = f"/api/uploads/{category}/{unique_filename}"
             uploaded_files.append({
                 "original_name": file.filename,
                 "filename": unique_filename,
@@ -2375,21 +2376,24 @@ async def delete_uploaded_file(
 ):
     await verify_token(credentials)
     
-    # Extract file path from URL
-    if file_url.startswith("/uploads/"):
+    # Extract file path from URL (handle both /uploads/ and /api/uploads/)
+    if file_url.startswith("/api/uploads/"):
+        relative_path = file_url[13:]  # Remove "/api/uploads/"
+    elif file_url.startswith("/uploads/"):
         relative_path = file_url[9:]  # Remove "/uploads/"
-        file_path = UPLOAD_DIR / relative_path
-        
-        if file_path.exists() and file_path.is_file():
-            try:
-                file_path.unlink()
-                return {"success": True, "message": "File deleted"}
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to delete file: {str(e)}")
-        else:
-            raise HTTPException(status_code=404, detail="File not found")
     else:
         raise HTTPException(status_code=400, detail="Invalid file URL")
+    
+    file_path = UPLOAD_DIR / relative_path
+    
+    if file_path.exists() and file_path.is_file():
+        try:
+            file_path.unlink()
+            return {"success": True, "message": "File deleted"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to delete file: {str(e)}")
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
 
 app.include_router(api_router)
 

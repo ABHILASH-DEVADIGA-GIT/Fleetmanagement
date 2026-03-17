@@ -1,5 +1,5 @@
 // Utility function to get the full image URL
-// Handles both external URLs (http/https) and local uploads (/uploads/...)
+// Handles both external URLs (http/https) and local uploads (/api/uploads/...)
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
@@ -11,9 +11,14 @@ export const getImageUrl = (imageUrl) => {
     return imageUrl;
   }
   
-  // If it's a local upload path, prepend the API base URL
-  if (imageUrl.startsWith('/uploads/')) {
+  // If it's already using /api/uploads path, prepend base URL
+  if (imageUrl.startsWith('/api/uploads/')) {
     return `${API_BASE_URL}${imageUrl}`;
+  }
+  
+  // If it's using old /uploads/ path (without /api), convert to new path
+  if (imageUrl.startsWith('/uploads/')) {
+    return `${API_BASE_URL}/api${imageUrl}`;
   }
   
   // For any other relative path, prepend API base URL

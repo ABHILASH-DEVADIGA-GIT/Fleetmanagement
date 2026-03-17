@@ -89,7 +89,7 @@ export const ImageUpload = ({
   };
 
   const handleRemove = async () => {
-    if (value && value.startsWith('/uploads/')) {
+    if (value && (value.startsWith('/uploads/') || value.startsWith('/api/uploads/'))) {
       try {
         await api.delete('/upload', { params: { file_url: value } });
       } catch (error) {
@@ -102,8 +102,14 @@ export const ImageUpload = ({
   const getFullUrl = (path) => {
     if (!path) return '';
     if (path.startsWith('http')) return path;
-    // For local uploads, prepend the API base URL
     const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+    // Handle both old /uploads/ and new /api/uploads/ paths
+    if (path.startsWith('/api/uploads/')) {
+      return `${baseUrl}${path}`;
+    }
+    if (path.startsWith('/uploads/')) {
+      return `${baseUrl}/api${path}`;
+    }
     return `${baseUrl}${path}`;
   };
 
@@ -277,7 +283,7 @@ export const MultiImageUpload = ({
 
   const handleRemove = async (index) => {
     const urlToRemove = values[index];
-    if (urlToRemove && urlToRemove.startsWith('/uploads/')) {
+    if (urlToRemove && (urlToRemove.startsWith('/uploads/') || urlToRemove.startsWith('/api/uploads/'))) {
       try {
         await api.delete('/upload', { params: { file_url: urlToRemove } });
       } catch (error) {
@@ -292,6 +298,12 @@ export const MultiImageUpload = ({
     if (!path) return '';
     if (path.startsWith('http')) return path;
     const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+    if (path.startsWith('/api/uploads/')) {
+      return `${baseUrl}${path}`;
+    }
+    if (path.startsWith('/uploads/')) {
+      return `${baseUrl}/api${path}`;
+    }
     return `${baseUrl}${path}`;
   };
 
