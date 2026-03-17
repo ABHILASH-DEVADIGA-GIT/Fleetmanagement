@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Search, Filter, SortAsc, X, Phone, Mail, ShoppingBag, Package } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Filter, SortAsc, X, Phone, ShoppingBag, Package, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import api from '../../utils/api';
 import { Button } from '../ui/button';
@@ -20,6 +20,8 @@ export const PublicProducts = ({ products: initialProducts, categories: initialC
   const [sortBy, setSortBy] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showLightbox, setShowLightbox] = useState(false);
   const [loading, setLoading] = useState(false);
   const primaryColor = client?.primary_color || '#1e40af';
 
@@ -281,19 +283,50 @@ export const PublicProducts = ({ products: initialProducts, categories: initialC
       </section>
 
       {/* Product Detail Modal */}
-      <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
+      <Dialog open={!!selectedProduct} onOpenChange={(open) => { if (!open) { setSelectedProduct(null); setSelectedImageIndex(0); } }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           {selectedProduct && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
               {/* Image Gallery */}
               <div style={{ backgroundColor: `${primaryColor}08` }}>
                 {selectedProduct.images && selectedProduct.images.length > 0 ? (
-                  <div className="aspect-square">
+                  <div className="aspect-square relative group">
                     <img 
-                      src={getImageUrl(selectedProduct.images[0])} 
+                      src={getImageUrl(selectedProduct.images[selectedImageIndex])} 
                       alt={t(selectedProduct.name)} 
                       className="w-full h-full object-contain p-4"
                     />
+                    {/* View Large Button */}
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                      onClick={() => setShowLightbox(true)}
+                    >
+                      <ZoomIn className="h-4 w-4 mr-1" />
+                      {t({ en: 'View Large', kn: 'ದೊಡ್ಡದಾಗಿ ನೋಡಿ', hi: 'बड़ा देखें' })}
+                    </Button>
+                    {/* Navigation Arrows */}
+                    {selectedProduct.images.length > 1 && (
+                      <>
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          onClick={() => setSelectedImageIndex(prev => prev > 0 ? prev - 1 : selectedProduct.images.length - 1)}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          onClick={() => setSelectedImageIndex(prev => prev < selectedProduct.images.length - 1 ? prev + 1 : 0)}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="aspect-square flex items-center justify-center" style={{ backgroundColor: `${primaryColor}10` }}>
@@ -302,15 +335,27 @@ export const PublicProducts = ({ products: initialProducts, categories: initialC
                 )}
                 {/* Thumbnail Gallery */}
                 {selectedProduct.images && selectedProduct.images.length > 1 && (
-                  <div className="flex gap-2 p-4">
-                    {selectedProduct.images.slice(0, 4).map((img, idx) => (
-                      <img 
-                        key={idx} 
-                        src={getImageUrl(img)} 
-                        alt="" 
-                        className="w-16 h-16 object-cover rounded-lg border-2 cursor-pointer hover:border-primary transition-colors"
-                        style={{ borderColor: `${primaryColor}30` }}
-                      />
+                  <div className="flex gap-2 p-4 justify-center">
+                    {selectedProduct.images.map((img, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => setSelectedImageIndex(idx)}
+                        className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                          idx === selectedImageIndex 
+                            ? 'ring-2 ring-offset-2' 
+                            : 'opacity-70 hover:opacity-100'
+                        }`}
+                        style={{ 
+                          borderColor: idx === selectedImageIndex ? primaryColor : `${primaryColor}30`,
+                          ringColor: primaryColor
+                        }}
+                      >
+                        <img 
+                          src={getImageUrl(img)} 
+                          alt="" 
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
                     ))}
                   </div>
                 )}
@@ -354,33 +399,18 @@ export const PublicProducts = ({ products: initialProducts, categories: initialC
                   </p>
                 </div>
 
-                {/* Contact Buttons */}
-                {client && (
-                  <div className="space-y-3 pt-6 border-t">
-                    <p className="text-sm text-muted-foreground font-medium">
+                {/* Contact Button - Only Phone */}
+                {client && client.phone && (
+                  <div className="pt-6 border-t">
+                    <p className="text-sm text-muted-foreground font-medium mb-3">
                       {t({ en: 'Interested? Contact us:', kn: 'ಆಸಕ್ತಿ ಇದೆಯೇ? ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ:', hi: 'रुचि है? संपर्क करें:' })}
                     </p>
-                    {client.phone && (
-                      <a href={`tel:${client.phone}`}>
-                        <Button className="w-full text-white" size="lg" style={{ backgroundColor: primaryColor }}>
-                          <Phone className="h-4 w-4 mr-2" />
-                          {t({ en: 'Call', kn: 'ಕರೆ', hi: 'कॉल करें' })} {client.phone}
-                        </Button>
-                      </a>
-                    )}
-                    {client.email && (
-                      <a href={`mailto:${client.email}?subject=Inquiry about ${t(selectedProduct.name)}`}>
-                        <Button 
-                          variant="outline" 
-                          className="w-full mt-2" 
-                          size="lg"
-                          style={{ borderColor: primaryColor, color: primaryColor }}
-                        >
-                          <Mail className="h-4 w-4 mr-2" />
-                          {t({ en: 'Email Inquiry', kn: 'ಇಮೇಲ್ ವಿಚಾರಣೆ', hi: 'ईमेल पूछताछ' })}
-                        </Button>
-                      </a>
-                    )}
+                    <a href={`tel:${client.phone}`}>
+                      <Button className="w-full text-white" size="lg" style={{ backgroundColor: primaryColor }}>
+                        <Phone className="h-4 w-4 mr-2" />
+                        {t({ en: 'Call', kn: 'ಕರೆ', hi: 'कॉल करें' })} {client.phone}
+                      </Button>
+                    </a>
                   </div>
                 )}
               </div>
@@ -388,6 +418,70 @@ export const PublicProducts = ({ products: initialProducts, categories: initialC
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Fullscreen Lightbox */}
+      <AnimatePresence>
+        {showLightbox && selectedProduct && selectedProduct.images && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center"
+            onClick={() => setShowLightbox(false)}
+          >
+            {/* Close Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 text-white hover:bg-white/20 z-50"
+              onClick={() => setShowLightbox(false)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+
+            {/* Previous Button */}
+            {selectedProduct.images.length > 1 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute left-4 text-white hover:bg-white/20 h-12 w-12"
+                onClick={(e) => { e.stopPropagation(); setSelectedImageIndex(prev => prev > 0 ? prev - 1 : selectedProduct.images.length - 1); }}
+              >
+                <ChevronLeft className="h-8 w-8" />
+              </Button>
+            )}
+
+            {/* Image */}
+            <motion.img
+              key={selectedImageIndex}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              src={getImageUrl(selectedProduct.images[selectedImageIndex])}
+              alt={t(selectedProduct.name)}
+              className="max-w-[90vw] max-h-[90vh] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+
+            {/* Next Button */}
+            {selectedProduct.images.length > 1 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-4 text-white hover:bg-white/20 h-12 w-12"
+                onClick={(e) => { e.stopPropagation(); setSelectedImageIndex(prev => prev < selectedProduct.images.length - 1 ? prev + 1 : 0); }}
+              >
+                <ChevronRight className="h-8 w-8" />
+              </Button>
+            )}
+
+            {/* Image Counter */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm bg-black/50 px-4 py-2 rounded-full">
+              {selectedImageIndex + 1} / {selectedProduct.images.length}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
