@@ -1,5 +1,6 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -14,9 +15,14 @@ import bcrypt
 import jwt
 import resend
 import asyncio
+import shutil
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# Create uploads directory
+UPLOAD_DIR = ROOT_DIR / 'uploads'
+UPLOAD_DIR.mkdir(exist_ok=True)
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -36,6 +42,9 @@ security = HTTPBearer()
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
+
+# Mount uploads directory for serving static files
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 logger = logging.getLogger(__name__)
 
@@ -2235,6 +2244,152 @@ async def create_notification_api(
     # Remove _id before returning
     notification.pop('_id', None)
     return notification
+
+# ============= File Upload System =============
+
+ALLOWED_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+def get_file_extension(filename: str) -> str:
+    return Path(filename).suffix.lower()
+
+def is_valid_image(filename: str) -> bool:
+    return get_file_extension(filename) in ALLOWED_IMAGE_EXTENSIONS
+
+def generate_unique_filename(original_filename: str, category: str) -> str:
+    ext = get_file_extension(original_filename)
+    unique_id = str(uuid.uuid4())[:8]
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    return f"{category}_{timestamp}_{unique_id}{ext}"
+
+# Single file upload
+@api_router.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    category: str = Form(default="general"),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    await verify_token(credentials)
+    
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file provided")
+    
+    if not is_valid_image(file.filename):
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file type. Allowed types: {', '.join(ALLOWED_IMAGE_EXTENSIONS)}"
+        )
+    
+    # Check file size
+    contents = await file.read()
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File too large. Maximum size is 10MB")
+    
+    # Create category subdirectory
+    category_dir = UPLOAD_DIR / category
+    category_dir.mkdir(exist_ok=True)
+    
+    # Generate unique filename
+    unique_filename = generate_unique_filename(file.filename, category)
+    file_path = category_dir / unique_filename
+    
+    # Save file
+    with open(file_path, "wb") as f:
+        f.write(contents)
+    
+    # Return the URL path
+    url_path = f"/uploads/{category}/{unique_filename}"
+    
+    return {
+        "success": True,
+        "filename": unique_filename,
+        "url": url_path,
+        "size": len(contents),
+        "category": category
+    }
+
+# Multiple files upload
+@api_router.post("/upload/multiple")
+async def upload_multiple_files(
+    files: List[UploadFile] = File(...),
+    category: str = Form(default="general"),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    await verify_token(credentials)
+    
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided")
+    
+    # Create category subdirectory
+    category_dir = UPLOAD_DIR / category
+    category_dir.mkdir(exist_ok=True)
+    
+    uploaded_files = []
+    errors = []
+    
+    for file in files:
+        if not file.filename:
+            errors.append({"file": "unknown", "error": "No filename"})
+            continue
+            
+        if not is_valid_image(file.filename):
+            errors.append({"file": file.filename, "error": "Invalid file type"})
+            continue
+        
+        try:
+            contents = await file.read()
+            
+            if len(contents) > MAX_FILE_SIZE:
+                errors.append({"file": file.filename, "error": "File too large"})
+                continue
+            
+            unique_filename = generate_unique_filename(file.filename, category)
+            file_path = category_dir / unique_filename
+            
+            with open(file_path, "wb") as f:
+                f.write(contents)
+            
+            url_path = f"/uploads/{category}/{unique_filename}"
+            uploaded_files.append({
+                "original_name": file.filename,
+                "filename": unique_filename,
+                "url": url_path,
+                "size": len(contents)
+            })
+        except Exception as e:
+            errors.append({"file": file.filename, "error": str(e)})
+    
+    return {
+        "success": len(uploaded_files) > 0,
+        "uploaded": uploaded_files,
+        "errors": errors,
+        "total_uploaded": len(uploaded_files),
+        "total_errors": len(errors)
+    }
+
+# Delete uploaded file
+@api_router.delete("/upload")
+async def delete_uploaded_file(
+    file_url: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    await verify_token(credentials)
+    
+    # Extract file path from URL
+    if file_url.startswith("/uploads/"):
+        relative_path = file_url[9:]  # Remove "/uploads/"
+        file_path = UPLOAD_DIR / relative_path
+        
+        if file_path.exists() and file_path.is_file():
+            try:
+                file_path.unlink()
+                return {"success": True, "message": "File deleted"}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Failed to delete file: {str(e)}")
+        else:
+            raise HTTPException(status_code=404, detail="File not found")
+    else:
+        raise HTTPException(status_code=400, detail="Invalid file URL")
 
 app.include_router(api_router)
 

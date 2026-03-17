@@ -9,6 +9,7 @@ import { Switch } from '../ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Card } from '../ui/card';
 import { toast } from 'sonner';
+import { ImageUpload } from '../shared/ImageUpload';
 
 export const ServiceManagement = () => {
   const [services, setServices] = useState([]);
@@ -105,15 +106,13 @@ export const ServiceManagement = () => {
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4" data-testid="service-form">
-              <div>
-                <Label>Image URL</Label>
-                <Input
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
-                  data-testid="image-url-input"
-                />
-              </div>
+              <ImageUpload
+                label="Service Image"
+                value={formData.image_url}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                category="services"
+                previewSize="lg"
+              />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label>Name (English)</Label>

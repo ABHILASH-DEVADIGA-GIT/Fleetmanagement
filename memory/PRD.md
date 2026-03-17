@@ -165,6 +165,25 @@ FrameBook Pro is a comprehensive SaaS platform for service businesses (photograp
 - Fixed navigation bug (links now navigate directly without /about redirect)
 - All pages use dynamic `primaryColor` from client settings for consistency
 
+### File Upload System (March 2026 - Latest)
+- **Replaced all URL input fields with file upload functionality**
+- Backend:
+  - Upload endpoint: `POST /api/upload` (single file)
+  - Multiple upload: `POST /api/upload/multiple` (up to 10 files)
+  - Delete: `DELETE /api/upload?file_url=...`
+  - Files stored in `/app/backend/uploads/{category}/`
+  - Served via `/uploads/` static route
+  - Supported formats: JPG, JPEG, PNG, GIF, WebP, SVG
+  - Max file size: 10MB
+- Frontend components:
+  - `ImageUpload` - Single file upload with preview and drag-drop
+  - `MultiImageUpload` - Multiple files with grid preview
+- Updated forms:
+  - Gallery Management: Single image upload
+  - Service Management: Single image upload  
+  - Product Management: Multi-image upload (0/5)
+  - Site Content Editor: Hero background, Logo, About image
+
 ### UI/UX Improvements (March 2026 - Latest)
 - **Reduced ribbon/stats bar sizes** - More compact stats sections across all public pages
 - **Reduced footer padding** - Cleaner, less spacious footer

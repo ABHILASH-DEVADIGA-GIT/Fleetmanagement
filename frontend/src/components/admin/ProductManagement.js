@@ -12,6 +12,7 @@ import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { toast } from 'sonner';
+import { MultiImageUpload } from '../shared/ImageUpload';
 
 export const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -342,36 +343,13 @@ export const ProductManagement = () => {
           </Tabs>
 
           {/* Images */}
-          <div className="space-y-3">
-            <Label>Product Images</Label>
-            <div className="flex gap-2">
-              <Input
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="Enter image URL"
-                className="flex-1"
-              />
-              <Button type="button" variant="outline" onClick={addImage}>Add</Button>
-            </div>
-            {formData.images.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {formData.images.map((url, idx) => (
-                  <div key={idx} className="relative w-24 h-24 rounded-lg overflow-hidden border">
-                    <img src={url} alt="" className="w-full h-full object-cover" />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-1 right-1 h-6 w-6"
-                      onClick={() => removeImage(idx)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <MultiImageUpload
+            label="Product Images"
+            values={formData.images}
+            onChange={(urls) => setFormData(prev => ({ ...prev, images: urls }))}
+            category="products"
+            maxFiles={5}
+          />
 
           {/* Pricing & Category */}
           <div className="grid grid-cols-2 gap-4">

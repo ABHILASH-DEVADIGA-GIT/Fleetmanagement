@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { toast } from 'sonner';
+import { ImageUpload } from '../shared/ImageUpload';
 
 export const GalleryManagement = () => {
   const [images, setImages] = useState([]);
@@ -198,25 +199,13 @@ export const GalleryManagement = () => {
           </DialogHeader>
 
           <div className="space-y-4">
-            <div>
-              <Label>Image URL *</Label>
-              <Input
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                placeholder="https://..."
-              />
-            </div>
-
-            {formData.image_url && (
-              <div className="aspect-video rounded-lg overflow-hidden bg-muted">
-                <img 
-                  src={formData.image_url} 
-                  alt="Preview" 
-                  className="w-full h-full object-contain"
-                  onError={(e) => e.target.style.display = 'none'}
-                />
-              </div>
-            )}
+            <ImageUpload
+              label="Gallery Image *"
+              value={formData.image_url}
+              onChange={(url) => setFormData({ ...formData, image_url: url })}
+              category="gallery"
+              previewSize="lg"
+            />
 
             <div>
               <Label>Title</Label>

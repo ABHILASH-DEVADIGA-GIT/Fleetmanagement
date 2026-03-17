@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Card } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { toast } from 'sonner';
+import { ImageUpload } from '../shared/ImageUpload';
 
 const SECTIONS = [
   { id: 'hero', label: 'Hero Section', icon: Image },
@@ -205,22 +206,20 @@ const HeroEditor = ({ formData, updateField, getNestedValue }) => (
     ))}
 
     <div className="space-y-4 pt-4 border-t">
-      <div>
-        <Label>Background Image URL</Label>
-        <Input
-          value={formData.background_image || ''}
-          onChange={(e) => updateField('background_image', e.target.value)}
-          placeholder="https://..."
-        />
-      </div>
-      <div>
-        <Label>Logo URL</Label>
-        <Input
-          value={formData.logo_url || ''}
-          onChange={(e) => updateField('logo_url', e.target.value)}
-          placeholder="https://..."
-        />
-      </div>
+      <ImageUpload
+        label="Background Image"
+        value={formData.background_image || ''}
+        onChange={(url) => updateField('background_image', url)}
+        category="hero"
+        previewSize="lg"
+      />
+      <ImageUpload
+        label="Logo"
+        value={formData.logo_url || ''}
+        onChange={(url) => updateField('logo_url', url)}
+        category="logos"
+        previewSize="md"
+      />
       <div>
         <Label>CTA Button Link</Label>
         <Input
@@ -266,14 +265,13 @@ const AboutEditor = ({ formData, updateField, getNestedValue }) => (
       ))}
     </Tabs>
 
-    <div>
-      <Label>About Image URL</Label>
-      <Input
-        value={formData.image_url || ''}
-        onChange={(e) => updateField('image_url', e.target.value)}
-        placeholder="https://..."
-      />
-    </div>
+    <ImageUpload
+      label="About Image"
+      value={formData.image_url || ''}
+      onChange={(url) => updateField('image_url', url)}
+      category="about"
+      previewSize="lg"
+    />
   </div>
 );
 
