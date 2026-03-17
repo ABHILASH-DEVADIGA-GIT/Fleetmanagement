@@ -6,6 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export const PublicHome = ({ content, siteContent, offers, services, clientId, client }) => {
   const { t } = useLanguage();
@@ -31,7 +32,7 @@ export const PublicHome = ({ content, siteContent, offers, services, clientId, c
         <div 
           className="absolute inset-0 bg-cover bg-center" 
           style={{ 
-            backgroundImage: `url(${heroContent?.background_image || 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1920&q=80'})` 
+            backgroundImage: `url(${getImageUrl(heroContent?.background_image) || 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1920&q=80'})` 
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent" />
@@ -187,7 +188,7 @@ export const PublicHome = ({ content, siteContent, offers, services, clientId, c
                     <div className="aspect-[4/3] overflow-hidden bg-muted">
                       {service.image_url ? (
                         <img 
-                          src={service.image_url} 
+                          src={getImageUrl(service.image_url)} 
                           alt={t(service.name)} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
@@ -293,7 +294,7 @@ export const PublicHome = ({ content, siteContent, offers, services, clientId, c
               ></div>
               <div className="aspect-[4/3] rounded-xl overflow-hidden shadow-2xl relative z-10">
                 <img
-                  src={aboutContent?.image_url || 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=800&q=80'}
+                  src={getImageUrl(aboutContent?.image_url) || 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=800&q=80'}
                   alt={t(aboutContent?.title) || 'About us'}
                   className="w-full h-full object-cover"
                 />

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 import { Badge } from '../ui/badge';
 import { Camera, Award, Users, Heart, CheckCircle, Star } from 'lucide-react';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export const PublicAbout = ({ content, siteContent, client }) => {
   const { t } = useLanguage();
@@ -115,7 +116,7 @@ export const PublicAbout = ({ content, siteContent, client }) => {
               ></div>
               <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl relative z-10">
                 <img
-                  src={aboutContent?.image_url || 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=800&q=80'}
+                  src={getImageUrl(aboutContent?.image_url) || 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=800&q=80'}
                   alt={t(aboutContent?.title) || 'About us'}
                   className="w-full h-full object-cover"
                 />

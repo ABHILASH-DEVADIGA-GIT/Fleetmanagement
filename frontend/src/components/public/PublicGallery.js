@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Link } from 'react-router-dom';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export const PublicGallery = ({ gallery, siteContent, client, clientId }) => {
   const { t } = useLanguage();
@@ -153,7 +154,7 @@ export const PublicGallery = ({ gallery, siteContent, client, clientId }) => {
                 onClick={() => setSelectedImage(image)}
               >
                 <img 
-                  src={image.image_url} 
+                  src={getImageUrl(image.image_url)} 
                   alt={image.title || 'Gallery image'} 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
@@ -231,7 +232,7 @@ export const PublicGallery = ({ gallery, siteContent, client, clientId }) => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              src={selectedImage.image_url}
+              src={getImageUrl(selectedImage.image_url)}
               alt={selectedImage.title || 'Gallery image'}
               className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
               onClick={(e) => e.stopPropagation()}

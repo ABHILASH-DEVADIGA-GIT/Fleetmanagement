@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Card } from '../ui/card';
 import { toast } from 'sonner';
 import { ImageUpload } from '../shared/ImageUpload';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export const ServiceManagement = () => {
   const [services, setServices] = useState([]);
@@ -198,7 +199,7 @@ export const ServiceManagement = () => {
         {services.map((service) => (
           <Card key={service.service_id} className="overflow-hidden" data-testid="service-card">
             {service.image_url && (
-              <img src={service.image_url} alt={service.name.en} className="w-full h-48 object-cover" />
+              <img src={getImageUrl(service.image_url)} alt={service.name.en} className="w-full h-48 object-cover" />
             )}
             <div className="p-6">
               <h3 className="font-heading text-xl font-bold mb-2">{service.name.en}</h3>

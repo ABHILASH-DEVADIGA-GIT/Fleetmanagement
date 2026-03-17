@@ -13,6 +13,7 @@ import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { toast } from 'sonner';
 import { MultiImageUpload } from '../shared/ImageUpload';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -229,7 +230,7 @@ export const ProductManagement = () => {
               <div className="aspect-video bg-muted relative">
                 {product.images && product.images[0] ? (
                   <img 
-                    src={product.images[0]} 
+                    src={getImageUrl(product.images[0])} 
                     alt={product.name?.en} 
                     className="w-full h-full object-cover"
                   />

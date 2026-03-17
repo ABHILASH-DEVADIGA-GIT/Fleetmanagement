@@ -6,6 +6,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Camera, Star, CheckCircle } from 'lucide-react';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export const PublicServices = ({ services, offers, siteContent, client, clientId }) => {
   const { t } = useLanguage();
@@ -150,7 +151,7 @@ export const PublicServices = ({ services, offers, siteContent, client, clientId
                       <div className="aspect-[4/3] overflow-hidden bg-muted relative">
                         {service.image_url ? (
                           <img 
-                            src={service.image_url} 
+                            src={getImageUrl(service.image_url)} 
                             alt={t(service.name)} 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />

@@ -11,6 +11,7 @@ import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { toast } from 'sonner';
 import { ImageUpload } from '../shared/ImageUpload';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export const GalleryManagement = () => {
   const [images, setImages] = useState([]);
@@ -150,7 +151,7 @@ export const GalleryManagement = () => {
             <Card key={image.image_id} className="overflow-hidden group relative">
               <div className="aspect-square">
                 <img 
-                  src={image.image_url} 
+                  src={getImageUrl(image.image_url)} 
                   alt={image.title || 'Gallery image'} 
                   className="w-full h-full object-cover"
                 />

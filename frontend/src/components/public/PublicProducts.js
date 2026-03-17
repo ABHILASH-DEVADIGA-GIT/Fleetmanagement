@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { Dialog, DialogContent } from '../ui/dialog';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export const PublicProducts = ({ products: initialProducts, categories: initialCategories, clientId, client }) => {
   const { t } = useLanguage();
@@ -208,7 +209,7 @@ export const PublicProducts = ({ products: initialProducts, categories: initialC
                     <div className="aspect-square bg-muted relative overflow-hidden">
                       {product.images && product.images[0] ? (
                         <img 
-                          src={product.images[0]} 
+                          src={getImageUrl(product.images[0])} 
                           alt={t(product.name)} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
@@ -289,7 +290,7 @@ export const PublicProducts = ({ products: initialProducts, categories: initialC
                 {selectedProduct.images && selectedProduct.images.length > 0 ? (
                   <div className="aspect-square">
                     <img 
-                      src={selectedProduct.images[0]} 
+                      src={getImageUrl(selectedProduct.images[0])} 
                       alt={t(selectedProduct.name)} 
                       className="w-full h-full object-contain p-4"
                     />
@@ -305,7 +306,7 @@ export const PublicProducts = ({ products: initialProducts, categories: initialC
                     {selectedProduct.images.slice(0, 4).map((img, idx) => (
                       <img 
                         key={idx} 
-                        src={img} 
+                        src={getImageUrl(img)} 
                         alt="" 
                         className="w-16 h-16 object-cover rounded-lg border-2 cursor-pointer hover:border-primary transition-colors"
                         style={{ borderColor: `${primaryColor}30` }}
