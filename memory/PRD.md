@@ -1,213 +1,142 @@
-# FrameBook Pro - Multi-Tenant SaaS Platform
+# FrameBook Pro - Product Requirements Document
 
-## Product Overview
-FrameBook Pro is a comprehensive SaaS platform for service businesses (photographers, makeup artists, event managers, convention centers, tourist bus operators) with multi-client architecture and dynamic website generation.
+## Project Overview
+A comprehensive multi-tenant SaaS platform for service-based businesses like photographers, event managers, and creative professionals.
 
-## Core Features
+## Original Problem Statement
+Build a multi-tenant platform where:
+- Each client has a unique public website and admin panel
+- Super Admin can manage clients, enable/disable modules, set resource limits
+- File uploads stored locally (not URL-based)
+- In-app notification system
+- Product catalog module (display-only, no cart)
 
-### Phase 1: Business Management Suite (COMPLETED)
-- **Dashboard** - Overview with key metrics
-- **Calendar Module** - Event scheduling, walk-in appointments, time blocking
-- **Lead Management** - CRM with status tracking (New, Contacted, Follow Up, Quotation Sent, Confirmed, Lost)
-- **Package Management** - Service packages with pricing
-- **Add-on Services** - Additional services
-- **Quotation Builder** - Full CRUD, PDF download with admin & customer details
-- **Invoice & Billing** - Create directly or from quotations, payment tracking, PDF download
-- **Expense Tracking** - Track business expenses
-- **Reports** - Revenue, lead conversion, event profitability
+## Tech Stack
+- **Frontend:** React 19, Tailwind CSS, Shadcn UI, React Router
+- **Backend:** Python FastAPI, Motor (async MongoDB driver)
+- **Database:** MongoDB
+- **Authentication:** JWT (python-jose, bcrypt)
+- **File Handling:** python-multipart, local file storage
+- **Email:** Resend (optional)
 
-### Phase 2: Feature Module Control System (COMPLETED)
-- **Super Admin Dashboard** - Platform owner management
-- **Client Management** - Create/edit clients with:
-  - Business details (name, email, phone, domain)
-  - Auto-created admin account
-  - Theme and branding (primary color, logo)
-  - Language support (EN, KN, HI)
-  - **Module Enable/Disable**: About, Services, Gallery, Booking, Products, Offers, Contact
-- **Automatic Setup** - When Super Admin creates client:
-  - Client record created
-  - Admin user auto-created
-  - Default site content generated
-  - Website goes live immediately
+## Architecture
+```
+/app
+├── backend/
+│   ├── server.py       # Monolithic FastAPI (2461 lines)
+│   ├── uploads/        # File storage (gallery, logos, products, services)
+│   └── .env
+└── frontend/
+    └── src/
+        ├── components/ # admin/, public/, shared/, superadmin/, ui/
+        ├── pages/      # AdminDashboard, SuperAdminDashboard, PublicWebsite, Login
+        ├── context/    # Auth, Theme, Language, Notification
+        └── utils/      # api.js, imageUrl.js, pdfGenerator.js
+```
 
-### Phase 3: Product Catalog Module (COMPLETED)
-- **Admin Product Management**:
-  - Multi-language product names and descriptions (EN, KN, HI)
-  - Multiple product images via URLs
-  - Base price with discount percentage
-  - Auto-calculated final price
-  - Product categories
-  - Active/Inactive status
-- **Public Products Page** (Flipkart/Amazon Style):
-  - Grid display of products
-  - Category filter
-  - Price sorting (Low to High, High to Low)
-  - Search functionality
-  - Product detail modal with images, description, price, contact buttons
+## Implemented Features (Complete)
 
-### Phase 4: Gallery Management (COMPLETED)
-- **Admin Gallery Management**:
-  - Add images via URL
-  - Title, description, category
-  - Featured image toggle
-- **Public Gallery Page**:
-  - Grid display with hover effects
-  - Category filter
-  - Lightbox with navigation
+### Phase 1: Core Platform
+- [x] Multi-tenant architecture with client_id scoping
+- [x] Super Admin dashboard for client management
+- [x] Client Admin dashboard with role-based access
+- [x] JWT authentication system
+- [x] MongoDB data persistence
 
-### Phase 5: Public Website Enhancement (COMPLETED)
-- **Site Content Editor** - All sections editable from admin:
-  - Hero Section (headline, sub-headline, CTA, background image, logo)
-  - About Section (title, description, image)
-  - Services Section (title, subtitle)
-  - Gallery Section (title, subtitle)
-  - Products Section (title, subtitle)
-  - Booking Section (title, subtitle)
-  - Contact Section (title, subtitle, address, Google Maps embed)
-  - Footer (copyright text, social media links)
-- **Multi-language Support** - All content in EN, KN, HI
-- **Dynamic Navigation** - Shows only enabled modules
-- **Theme Control** - Light/Dark theme toggle
-- **Language Switcher** - In header
-- **Professional UI Design** - Compact hero, proper image sizing, clean layouts
+### Phase 2: Business Management
+- [x] Lead Management (CRM) with status tracking
+- [x] Package & Add-on management
+- [x] Quotation system with PDF generation
+- [x] Invoice system with payment tracking
+- [x] Event management & calendar view
+- [x] Expense tracking per event
+- [x] Dashboard analytics & reports
 
-## Technical Architecture
+### Phase 3: Public Website
+- [x] Dynamic public website per client
+- [x] Services, Gallery, Products, Booking, Contact modules
+- [x] Multi-language support (EN, HI, KN)
+- [x] Offer/promotion display
+- [x] Booking form with date blocking
 
-### Backend
-- **Framework**: FastAPI (Python)
-- **Database**: MongoDB (Motor async driver)
-- **Authentication**: JWT tokens
-- **Password Hashing**: bcrypt via passlib
+### Phase 4: Content Management
+- [x] Site Content Editor (Hero, About, Services, Gallery, etc.)
+- [x] Service management with images
+- [x] Gallery management with categories
+- [x] Product catalog with multi-image support
+- [x] Offer management
 
-### Frontend
-- **Framework**: React 18
-- **Routing**: React Router v6
-- **Styling**: Tailwind CSS
-- **Components**: Shadcn/UI
-- **State**: React Context API
-- **HTTP Client**: Axios
-
-### Multi-Tenancy
-- All data segregated by `client_id`
-- Domain-based client lookup supported
-- Enabled modules control per client
+### Phase 5: Advanced Features
+- [x] File upload system (replacing URL inputs)
+- [x] In-app notification center
+- [x] Resource limits (max_products, max_gallery_images)
+- [x] Logo upload for clients
+- [x] Public products API with filtering/sorting
 
 ## Database Collections
-- `users` - User accounts with roles (super_admin, admin)
-- `clients` - Client businesses with enabled_modules
-- `services` - Services offered by clients
-- `packages` - Service packages
-- `addons` - Add-on services
-- `leads` - Customer leads
-- `quotations` - Quotations with items
-- `invoices` - Invoices with payments
-- `expenses` - Business expenses
-- `events` - Calendar events
-- `walkin_appointments` - Blocked time periods
-- `products` - Product catalog
-- `product_categories` - Product categories
-- `gallery` - Gallery images
-- `site_content` - Website content sections
-- `page_content` - Legacy content (backward compatibility)
-- `offers` - Special offers
-- `bookings` - Appointment bookings
+- users, clients, services, gallery, products, product_categories
+- leads, lead_notes, packages, addons, quotations, invoices
+- events, expenses, bookings, notifications, site_content
+- page_content (legacy), blocked_dates, offers
 
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/login` - User login
-- `GET /api/auth/me` - Current user
-
-### Super Admin
-- `GET/POST /api/super-admin/clients` - Client management
-- `GET/PUT/DELETE /api/super-admin/clients/{client_id}` - Single client
-
-### Admin - Business
-- `GET /api/admin/dashboard-summary` - Dashboard metrics
-- CRUD for: packages, addons, leads, quotations, invoices, expenses, events
-- `POST /api/admin/walkin-appointments` - Block time
-- Reports: revenue, pending payments, lead conversion, event profit
-
-### Admin - Website
-- `GET/POST /api/admin/products` - Product catalog
-- `GET/POST /api/admin/product-categories` - Categories
-- `GET/POST /api/admin/gallery` - Gallery images
-- `GET/PUT /api/admin/site-content` - Site content sections
-
-### Public
-- `GET /api/public/site/{client_id}` - All public data
-- `GET /api/public/products/{client_id}` - Products with filters
-- `GET /api/public/site-by-domain` - Domain-based lookup
+## API Endpoints (Key)
+- `/api/auth/*` - Authentication
+- `/api/super-admin/*` - Platform management
+- `/api/admin/*` - Client management
+- `/api/public/*` - Public website data
+- `/api/upload` - File uploads
 
 ## Credentials
-- **Super Admin**: admin@lumina.com / admin123
-- **Demo Admin**: photographer@demo.com / photographer123
-- **Demo Client ID**: f0afd9ff-fb85-45e6-9f9e-8027f5fcfbca
+- **Super Admin:** admin@lumina.com / admin123
+- **Demo Client:** photographer@demo.com / photographer123
+- **Demo Client ID:** f0afd9ff-fb85-45e6-9f9e-8027f5fcfbca
 
-## Recent Changes (December 2025)
-- Implemented Feature Module Control System
-- Added Product Catalog with multi-language support
-- Added Gallery Management with lightbox
-- Enhanced Site Content Editor for all sections
-- Updated public navigation to show only enabled modules
-- **Fixed public website UI** - Compact hero section, proper image sizing, professional design
-- Added demo services and gallery images
-- Improved Services, About, Gallery pages with modern design
+---
 
-### UI Redesign (March 2026)
-- **Applied consistent blue-and-white theme** across ALL public pages
-- Each page now features:
-  - Hero section with client's primary color and decorative circular background patterns
-  - Stats bar with key metrics in primary color
-  - Content sections with consistent card styling and hover effects
-  - CTA section at bottom with primary color background
-- Pages updated: Home, About, Services, Gallery, Products, Contact
-- Fixed navigation bug (links now navigate directly without /about redirect)
-- All pages use dynamic `primaryColor` from client settings for consistency
+## Delivery Status: COMPLETE
 
-### File Upload System (March 2026 - Latest)
-- **Replaced all URL input fields with file upload functionality**
-- Backend:
-  - Upload endpoint: `POST /api/upload` (single file)
-  - Multiple upload: `POST /api/upload/multiple` (up to 10 files)
-  - Delete: `DELETE /api/upload?file_url=...`
-  - Files stored in `/app/backend/uploads/{category}/`
-  - Served via `/uploads/` static route
-  - Supported formats: JPG, JPEG, PNG, GIF, WebP, SVG
-  - Max file size: 10MB
-- Frontend components:
-  - `ImageUpload` - Single file upload with preview and drag-drop
-  - `MultiImageUpload` - Multiple files with grid preview
-- Updated forms:
-  - Gallery Management: Single image upload
-  - Service Management: Single image upload  
-  - Product Management: Multi-image upload (0/5)
-  - Site Content Editor: Hero background, Logo, About image
+### Deliverables Created
+1. **Complete Source Code** - `/app/framebook-pro-complete.zip`
+2. **Documentation:**
+   - `/app/docs/DEPLOYMENT_GUIDE.md` - Full deployment instructions
+   - `/app/docs/API_DOCUMENTATION.md` - Complete API reference
+   - `/app/docs/USER_MANUAL.md` - User guide for all roles
+   - `/app/docs/PROJECT_STRUCTURE.md` - Code organization
+   - `/app/docs/DATABASE_SCHEMA.md` - MongoDB schema documentation
+   - `/app/docs/sample_data.js` - Database initialization script
+3. **Environment Templates:**
+   - `/app/backend/.env.example`
+   - `/app/frontend/.env.example`
+4. **Main README:** `/app/README.md`
 
-### UI/UX Improvements (March 2026 - Latest)
-- **Reduced ribbon/stats bar sizes** - More compact stats sections across all public pages
-- **Reduced footer padding** - Cleaner, less spacious footer
-- **Smaller CTA sections** - More compact call-to-action areas
+### Package Contents
+- Complete frontend source code
+- Complete backend source code  
+- All configuration files
+- Environment templates
+- Sample uploaded files
+- Comprehensive documentation
 
-### In-App Notification System (March 2026 - Latest)
-- **WhatsApp/Social Media style notifications** in Admin Dashboard
-- Features:
-  - Bell icon with unread count badge (animated pulse)
-  - Categorized notifications with colored icons (booking=blue, lead=purple, payment=green, warning=amber, success=emerald)
-  - Time-ago format display (Just now, 5m ago, 1h ago, etc.)
-  - Mark as read / Mark all as read functionality
-  - Delete notifications
-  - Auto-polling every 30 seconds for new notifications
-  - Browser notification support (with permission)
-- Backend APIs: GET/POST/PUT/DELETE notifications
-- Auto-creates welcome notifications for new clients
+---
 
-## Testing URLs
-- **Login**: https://offer-dashboard-1.preview.emergentagent.com/login
-- **Public Site**: https://offer-dashboard-1.preview.emergentagent.com/site/f0afd9ff-fb85-45e6-9f9e-8027f5fcfbca
+## Future Improvements (Backlog)
 
-## Next Steps / Backlog
-1. **P1**: Email notifications (Resend integration pending)
-2. **P2**: In-app notification system
-3. **P2**: File upload for images (currently URL-based)
-4. **P3**: Domain verification system
+### P1 - High Priority
+- [ ] Email notifications via Resend
+- [ ] Backend refactoring (split server.py into modules)
+
+### P2 - Medium Priority  
+- [ ] Domain verification system
+- [ ] WhatsApp integration
+- [ ] Payment gateway integration (Razorpay/Stripe)
+
+### P3 - Low Priority
+- [ ] Admin user invitation system
+- [ ] Multi-admin support per client
+- [ ] Automated backup system
+- [ ] Rate limiting implementation
+
+---
+
+*Last Updated: December 2025*
+*Status: Project Delivery Complete*

@@ -1,74 +1,157 @@
-# Lumina SaaS - Photographer Management Platform
+# FrameBook Pro
 
-A complete multi-tenant SaaS platform for photographers with multi-language support, theme switching, and booking management.
+A comprehensive multi-tenant SaaS platform for service-based businesses like photographers, event managers, and creative professionals.
 
-## 🎯 Features
+## Features
 
-### Super Admin Features
-- **Client Management**: Create, edit, suspend, and delete photographer clients
-- **Content Override**: Override any client's website content
-- **User Management**: Create and manage super admins and client admins
-- **Language Control**: Enable/disable languages per client
-- **Theme Management**: Set light or dark themes for clients
-- **Dashboard**: Overview of all clients, users, and system stats
+### For Platform Owner (Super Admin)
+- Multi-tenant client management
+- Enable/disable feature modules per client
+- Set resource limits (gallery images, products)
+- Override client content
+- Platform-wide analytics
 
-### Admin (Photographer) Features
-- **Website Content Management**: Banner, Featured, About sections with multi-language
-- **Service Management**: CRUD operations with pricing and images
-- **Offer Management**: Time-bound offers with auto-show/hide
-- **Booking Management**: View, manage bookings, block dates
-- **User Management**: Add team members
-- **Notifications**: Real-time notifications
+### For Client Businesses (Admin)
+- **Public Website:** Customizable business website
+- **Lead Management:** CRM for tracking inquiries
+- **Quotations:** Create and send professional quotes
+- **Invoices:** Invoice generation with payment tracking
+- **Events:** Calendar management for bookings
+- **Expenses:** Track event-related expenses
+- **Gallery:** Portfolio showcase
+- **Product Catalog:** Display-only product catalog
+- **Booking System:** Online appointment booking
+- **Notifications:** Real-time in-app notifications
 
-### Public Website Features
-- **Multi-Language**: English, Kannada, Hindi
-- **Theme Toggle**: Light and dark mode
-- **Responsive Design**: Works on all devices
-- **Booking System**: Complete form with validation
-- **Email Notifications**: Automatic notifications
+### For Customers (Public)
+- View business information
+- Browse services and gallery
+- View product catalog
+- Book appointments online
+- Multi-language support (English, Hindi, Kannada)
 
-## 🚀 Quick Start
+## Tech Stack
 
-**Super Admin Credentials:**
-- Email: admin@lumina.com
-- Password: admin123
+- **Frontend:** React 19, Tailwind CSS, Shadcn UI
+- **Backend:** Python FastAPI
+- **Database:** MongoDB
+- **Authentication:** JWT
+- **File Storage:** Local file system
+- **Email:** Resend (optional)
 
-**Access URLs:**
-- Login: /login
-- Super Admin: /super-admin
-- Admin: /admin
-- Public Site: /site/{clientId}
+## Quick Start
 
-## 🛠️ Tech Stack
+### Prerequisites
+- Node.js 18+
+- Python 3.10+
+- MongoDB 6.0+
 
-- **Backend**: FastAPI + MongoDB + JWT + Resend
-- **Frontend**: React 19 + Tailwind + Shadcn/UI + Framer Motion
+### Installation
 
-## 📚 API Endpoints
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd framebook-pro
+```
 
-See full documentation in README file for complete API reference.
+2. **Backend Setup**
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env with your configuration
+```
 
-**Key Endpoints:**
-- POST /api/auth/login - Authentication
-- GET /api/super-admin/clients - Client management
-- GET /api/admin/content - Content management
-- POST /api/public/bookings - Public booking submission
+3. **Frontend Setup**
+```bash
+cd frontend
+yarn install
+cp .env.example .env
+# Edit .env with your backend URL
+```
 
-## 🎨 Design System
+4. **Start Services**
+```bash
+# Terminal 1 - Backend
+cd backend
+source venv/bin/activate
+uvicorn server:app --host 0.0.0.0 --port 8001
 
-- **Colors**: Bronze Gold (#C68E17) + Cinematic Blue (#1B2A41)
-- **Typography**: Playfair Display + Manrope + Plus Jakarta Sans
-- **Layout**: Professional corporate aesthetic
+# Terminal 2 - Frontend
+cd frontend
+yarn start
+```
 
-## 📄 Full Documentation
+5. **Initialize Database**
+```bash
+mongosh < docs/sample_data.js
+```
 
-See `/app/DOCUMENTATION.md` for complete documentation including:
-- Detailed API reference
-- Database schema
-- Security features
-- Multi-language implementation
-- Email configuration
-- Troubleshooting guide
+### Default Credentials
+- **Super Admin:** admin@framebookpro.com / admin123
+- **Demo Client:** demo@stellar.com / demo123
 
----
-**Built with Emergent Agent**
+## Documentation
+
+- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
+- [API Documentation](docs/API_DOCUMENTATION.md)
+- [User Manual](docs/USER_MANUAL.md)
+- [Project Structure](docs/PROJECT_STRUCTURE.md)
+- [Database Schema](docs/DATABASE_SCHEMA.md)
+
+## Project Structure
+
+```
+framebook-pro/
+├── backend/
+│   ├── server.py          # FastAPI application
+│   ├── requirements.txt   # Python dependencies
+│   ├── .env.example       # Environment template
+│   └── uploads/           # File storage
+├── frontend/
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   ├── pages/         # Page components
+│   │   ├── context/       # React contexts
+│   │   └── utils/         # Utilities
+│   ├── package.json       # Node dependencies
+│   └── .env.example       # Environment template
+└── docs/                  # Documentation
+```
+
+## Environment Variables
+
+### Backend (.env)
+| Variable | Description |
+|----------|-------------|
+| MONGO_URL | MongoDB connection string |
+| DB_NAME | Database name |
+| JWT_SECRET | Secret key for JWT tokens |
+| CORS_ORIGINS | Allowed CORS origins |
+| RESEND_API_KEY | Resend email API key (optional) |
+| SENDER_EMAIL | Email sender address |
+
+### Frontend (.env)
+| Variable | Description |
+|----------|-------------|
+| REACT_APP_BACKEND_URL | Backend API URL |
+
+## API Overview
+
+| Prefix | Description | Auth |
+|--------|-------------|------|
+| /api/auth | Authentication | Public |
+| /api/super-admin | Platform management | Super Admin |
+| /api/admin | Client management | Admin |
+| /api/public | Public data | Public |
+| /api/upload | File uploads | Admin |
+
+## License
+
+Proprietary - All rights reserved.
+
+## Support
+
+For technical support, please contact the development team.
