@@ -15,6 +15,8 @@ import { getImageUrl } from '../../utils/imageUrl';
 
 export const GalleryManagement = () => {
   const [images, setImages] = useState([]);
+  const [galleryLimit, setGalleryLimit] = useState(50);
+  const [galleryCount, setGalleryCount] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingImage, setEditingImage] = useState(null);
   const [formData, setFormData] = useState({
@@ -32,9 +34,20 @@ export const GalleryManagement = () => {
   const fetchImages = async () => {
     try {
       const response = await api.get('/admin/gallery');
-      setImages(response.data);
+      // Handle both array response and object with {images, count, limit}
+      if (Array.isArray(response.data)) {
+        setImages(response.data);
+        setGalleryCount(response.data.length);
+      } else if (response.data && response.data.images) {
+        setImages(response.data.images);
+        setGalleryCount(response.data.count || response.data.images.length);
+        setGalleryLimit(response.data.limit || 50);
+      } else {
+        setImages([]);
+      }
     } catch (error) {
       console.error('Failed to fetch gallery');
+      setImages([]);
     }
   };
 
@@ -103,7 +116,7 @@ export const GalleryManagement = () => {
     });
   };
 
-  const categories = [...new Set(images.map(img => img.category).filter(Boolean))];
+  const categories = [...new Set((Array.isArray(images) ? images : []).map(img => img.category).filter(Boolean))];
 
   return (
     <div data-testid="gallery-management" className="space-y-6">

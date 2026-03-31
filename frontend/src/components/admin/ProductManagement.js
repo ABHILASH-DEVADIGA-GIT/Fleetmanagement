@@ -38,21 +38,43 @@ export const ProductManagement = () => {
     fetchCategories();
   }, []);
 
+  const [productLimit, setProductLimit] = useState(100);
+  const [productCount, setProductCount] = useState(0);
+
   const fetchProducts = async () => {
     try {
       const response = await api.get('/admin/products');
-      setProducts(response.data);
+      // Handle both array response and object with {products, count, limit}
+      if (Array.isArray(response.data)) {
+        setProducts(response.data);
+        setProductCount(response.data.length);
+      } else if (response.data && response.data.products) {
+        setProducts(response.data.products);
+        setProductCount(response.data.count || response.data.products.length);
+        setProductLimit(response.data.limit || 100);
+      } else {
+        setProducts([]);
+      }
     } catch (error) {
       console.error('Failed to fetch products');
+      setProducts([]);
     }
   };
 
   const fetchCategories = async () => {
     try {
       const response = await api.get('/admin/product-categories');
-      setCategories(response.data);
+      // Handle both array response and object with categories
+      if (Array.isArray(response.data)) {
+        setCategories(response.data);
+      } else if (response.data && response.data.categories) {
+        setCategories(response.data.categories);
+      } else {
+        setCategories([]);
+      }
     } catch (error) {
       console.error('Failed to fetch categories');
+      setCategories([]);
     }
   };
 
@@ -195,25 +217,25 @@ export const ProductManagement = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4">
           <p className="text-xs text-muted-foreground uppercase">Total Products</p>
-          <p className="text-2xl font-bold">{products.length}</p>
+          <p className="text-2xl font-bold">{productCount} / {productLimit}</p>
         </Card>
         <Card className="p-4">
           <p className="text-xs text-muted-foreground uppercase">Active</p>
-          <p className="text-2xl font-bold text-green-600">{products.filter(p => p.is_active).length}</p>
+          <p className="text-2xl font-bold text-green-600">{Array.isArray(products) ? products.filter(p => p.is_active).length : 0}</p>
         </Card>
         <Card className="p-4">
           <p className="text-xs text-muted-foreground uppercase">With Discount</p>
-          <p className="text-2xl font-bold text-blue-600">{products.filter(p => p.discount_percentage > 0).length}</p>
+          <p className="text-2xl font-bold text-blue-600">{Array.isArray(products) ? products.filter(p => p.discount_percentage > 0).length : 0}</p>
         </Card>
         <Card className="p-4">
           <p className="text-xs text-muted-foreground uppercase">Categories</p>
-          <p className="text-2xl font-bold">{categories.length}</p>
+          <p className="text-2xl font-bold">{Array.isArray(categories) ? categories.length : 0}</p>
         </Card>
       </div>
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.length === 0 ? (
+        {!Array.isArray(products) || products.length === 0 ? (
           <Card className="col-span-full p-12 text-center">
             <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Products Yet</h3>
